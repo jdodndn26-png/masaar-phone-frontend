@@ -97,14 +97,12 @@ export default function Navbar({ initialLogo }: { initialLogo?: string }) {
               {logo && (
                 <Image
                   src={logo}
-                  unoptimized
                   alt="مؤسسة تبارك التقنية الذكية"
-                  width={0}
-                  height={0}
-                  sizes="100vw"
+                  width={160}
+                  height={80}
+                  sizes="(max-width: 1024px) 112px, 160px"
                   className="h-14 sm:h-14 lg:h-20 w-auto"
                   priority
-                  loading="eager"
                 />
               )}
             </Link>
