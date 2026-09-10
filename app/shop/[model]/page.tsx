@@ -1,0 +1,352 @@
+import { notFound } from "next/navigation";
+import { getCachedProducts } from "../../lib/products-cache";
+import ShopModelClient from "./ShopModelClient";
+import type { Product } from "../../components/products/types";
+
+interface HeroSlide {
+  image: string;
+  title: string;
+  subtitle: string;
+  highlight?: string;
+}
+
+const MODEL_MAP: Record<
+  string,
+  { label: string; keywords: string[]; hero: HeroSlide[] }
+> = {
+  "17-pro-max": {
+    label: "آيفون 17 برو ماكس",
+    keywords: ["17 برو ماكس", "17 pro max", "17promax"],
+    hero: [
+      { image: "/iphone-17-promax/i-hero1.webp", title: "تصميم بريميوم من ألومنيوم", subtitle: "تصميم بقطعة واحدة من الألومنيوم المشكّل بالحرارة لقدرات احترافية استثنائية.", highlight: "احترافية استثنائية" },
+      { image: "/iphone-17-promax/i-hero2.webp", title: "أداء نار مع شريحة A19 Pro", subtitle: "تبريد بالبخار، سرعة فائقة، وبطارية تدوم أكثر", highlight: "سرعة فائقة" },
+      { image: "/iphone-17-promax/i-hero3.webp", title: "كاميرا احترافية.. تفاصيل مذهلة", subtitle: "ثلاث كاميرات 48MP Fusion مع أطول زووم في تاريخ iPhone", highlight: "أطول زووم" },
+      { image: "/iphone-17-promax/i-hero4.webp", title: "كاميرا Center Stage.. سيلفي أذكى", subtitle: "تأطير مرن، صور جماعية أفضل، وتجربة سيلفي أكثر ذكاءً", highlight: "أكثر ذكاءً" },
+      { image: "/iphone-17-promax/i-hero5.webp", title: "iOS 26.. ستايل جديد وتجربة أجمل", subtitle: "تصميم جديد، مزايا أكثر، وتجربة استخدام أكثر سلاسة", highlight: "أكثر سلاسة" },
+      { image: "/iphone-17-promax/i-hero6.webp", title: "Apple Intelligence.. ذكاء يساعدك أكثر", subtitle: "إنشاء الصور، الترجمة المباشرة، ومزايا ذكية تجعل يومك أسهل", highlight: "يومك أسهل" },
+    ],
+  },
+  "17-pro": {
+    label: "آيفون 17 برو",
+    keywords: ["17 برو", "17 pro"],
+    hero: [
+      { image: "/iphone-17-promax/i-hero1.webp", title: "تصميم بريميوم من ألومنيوم", subtitle: "تصميم بقطعة واحدة من الألومنيوم المشكّل بالحرارة لقدرات احترافية استثنائية.", highlight: "احترافية استثنائية" },
+      { image: "/iphone-17-promax/i-hero2.webp", title: "أداء نار مع شريحة A19 Pro", subtitle: "تبريد بالبخار، سرعة فائقة، وبطارية تدوم أكثر", highlight: "سرعة فائقة" },
+      { image: "/iphone-17-promax/i-hero3.webp", title: "كاميرا احترافية.. تفاصيل مذهلة", subtitle: "ثلاث كاميرات 48MP Fusion مع أطول زووم في تاريخ iPhone", highlight: "أطول زووم" },
+      { image: "/iphone-17-promax/i-hero4.webp", title: "كاميرا Center Stage.. سيلفي أذكى", subtitle: "تأطير مرن، صور جماعية أفضل، وتجربة سيلفي أكثر ذكاءً", highlight: "أكثر ذكاءً" },
+      { image: "/iphone-17-promax/i-hero5.webp", title: "iOS 26.. ستايل جديد وتجربة أجمل", subtitle: "تصميم جديد، مزايا أكثر، وتجربة استخدام أكثر سلاسة", highlight: "أكثر سلاسة" },
+      { image: "/iphone-17-promax/i-hero6.webp", title: "Apple Intelligence.. ذكاء يساعدك أكثر", subtitle: "إنشاء الصور، الترجمة المباشرة، ومزايا ذكية تجعل يومك أسهل", highlight: "يومك أسهل" },
+    ],
+  },
+  "17-air": {
+    label: "آيفون 17 إير",
+    keywords: ["17 اير", "17 إير", "17 air"],
+    hero: [
+      {
+        image: "/iphone-17-air/i-hero1.webp",
+        title: "أنحف iPhone على الإطلاق",
+        subtitle: "في قلبه قوة عملاق.",
+        highlight: "أنحف"
+      },
+      {
+        image: "/iphone-17-air/i-hero2.webp",
+       title: "كاميرا Center Stage",
+        subtitle: "تأطير مرن. سيلفي جماعية أذكى.",
+        highlight: "Center Stage"
+      },
+      {
+        image: "/iphone-17-air/i-hero3.webp",
+         title: "كاميرا Fusion 48MP",
+        subtitle: "كاميرتان متطورتان في كاميرا واحدة.",
+        highlight: "48MP"
+      },
+      {
+        image: "/iphone-17-air/i-hero4.webp",
+         title: "iOS 26",
+        subtitle: "ستايل جديد. يبهرك بالمزيد.",
+        highlight: "ستايل جديد"
+      },
+      {
+        image: "/iphone-17-air/i-hero5.webp",
+        title: "شريحة A19 Pro",
+        subtitle: "قوة هائلة وبطارية تدوم طوال اليوم.",
+        highlight: "A19 Pro"
+      },
+     
+    ],
+  },
+  "16-pro-max": {
+    label: "آيفون 16 برو ماكس",
+    keywords: ["16 برو ماكس", "16 pro max", "16promax"],
+    hero: [
+      { image: "https://res.cloudinary.com/bzwltpqf/image/upload/v1788649290/d7b5e81a-a3de-42fd-b73e-0df0c2b4cb11.jpg", title: "آيفون 16 برو ماكس", subtitle: "قوة استثنائية في تصميم احترافي.", highlight: "احترافي" },
+    ],
+  },
+  "16-pro": {
+    label: "آيفون 16 برو",
+    keywords: ["16 برو", "16 pro"],
+    hero: [
+      { image: "https://res.cloudinary.com/bzwltpqf/image/upload/v1788649290/768732fa-f71e-47f6-a9cb-a8578dd4bff0.jpg", title: "آيفون 16 برو", subtitle: "أداء احترافي في حجم مثالي.", highlight: "احترافي" },
+    ],
+  },
+  "16-plus": {
+    label: "آيفون 16 بلس",
+    keywords: ["16 بلس", "16 plus"],
+    hero: [
+      { image: "https://res.cloudinary.com/bzwltpqf/image/upload/v1788643539/7bba49c7-f75e-4a42-a2cf-bff4ce3f6f9e.webp", title: "آيفون 16 بلس", subtitle: "شاشة كبيرة وبطارية تدوم أطول.", highlight: "بطارية تدوم" },
+    ],
+  },
+  "16": {
+    label: "آيفون 16",
+    keywords: ["ايفون 16", "آيفون 16", "iphone 16"],
+    hero: [
+      { image: "https://res.cloudinary.com/bzwltpqf/image/upload/v1788643537/e5241fbd-5d6a-4011-a5d7-8dda50c6e722.webp", title: "آيفون 16", subtitle: "تجربة iPhone الجديدة بالكامل.", highlight: "الجديدة" },
+    ],
+  },
+  "15-pro-max": {
+    label: "آيفون 15 برو ماكس",
+    keywords: ["15 برو ماكس", "15 pro max", "15promax"],
+    hero: [
+      { image: "https://res.cloudinary.com/bzwltpqf/image/upload/v1788649290/d7b5e81a-a3de-42fd-b73e-0df0c2b4cb11.jpg", title: "آيفون 15 برو ماكس", subtitle: "تيتانيوم. قوة. احتراف.", highlight: "تيتانيوم" },
+    ],
+  },
+  "15-pro": {
+    label: "آيفون 15 برو",
+    keywords: ["15 برو", "15 pro"],
+    hero: [
+      { image: "https://res.cloudinary.com/bzwltpqf/image/upload/v1788649290/d7b5e81a-a3de-42fd-b73e-0df0c2b4cb11.jpg", title: "آيفون 15 برو", subtitle: "تيتانيوم خفيف وأداء لا يُضاهى.", highlight: "تيتانيوم" },
+    ],
+  },
+  "15-plus": {
+    label: "آيفون 15 بلس",
+    keywords: ["15 بلس", "15 plus"],
+    hero: [
+      { image: "https://res.cloudinary.com/bzwltpqf/image/upload/v1788643538/d55b764c-e695-428a-99c9-a0768cd173e7.webp", title: "آيفون 15 بلس", subtitle: "شاشة ضخمة وبطارية استثنائية.", highlight: "بطارية استثنائية" },
+    ],
+  },
+  "15": {
+    label: "آيفون 15",
+    keywords: ["ايفون 15", "آيفون 15", "iphone 15"],
+    hero: [
+      { image: "https://res.cloudinary.com/bzwltpqf/image/upload/v1788643538/d55b764c-e695-428a-99c9-a0768cd173e7.webp", title: "آيفون 15", subtitle: "Dynamic Island وكاميرا 48MP.", highlight: "Dynamic Island" },
+    ],
+  },
+ 
+"galaxy-s26-ultra": {
+  label: "سامسونج جالاكسي اس 26 الترا",
+  keywords: ["s26 ultra", "galaxy s26 ultra", "اس 26 الترا", "جالاكسي s26 ultra", "s26 ألترا"],
+  hero: [
+    {
+      image: "https://res.cloudinary.com/bzwltpqf/image/upload/v1788911909/0615c3d5-1eb8-4a51-bcf4-ff687019d7fd.webp",
+      title: "Galaxy S26 Ultra",
+      subtitle: "هاتف الذكاء الاصطناعي الذي يرتقي بتجربتك اليومية.",
+      highlight: "ذكاء استثنائي"
+    },
+    {
+      image: "https://res.cloudinary.com/bzwltpqf/image/upload/v1788916374/dd2adde7-15a9-4cbc-9ebd-ad4bd6ed31a6.webp",
+      title: "خصوصيتك بين يديك",
+      subtitle: "شاشة الخصوصية تخفي محتواك عن أعين المتطفلين بلمسة واحدة.",
+      highlight: "خصوصية ذكية"
+    },
+    {
+      image: "https://res.cloudinary.com/bzwltpqf/image/upload/v1788916388/19c4ef91-bf01-4b56-bfba-45c75bd9db2a.webp",
+      title: "التصوير الليلي بمستوى جديد",
+      subtitle: "كاميرا 200MP بفتحة F1.4 لصور وفيديوهات أكثر وضوحاً في الإضاءة المنخفضة.",
+      highlight: "200MP"
+    },
+    {
+      image: "https://res.cloudinary.com/bzwltpqf/image/upload/v1788911909/b2ef9e0b-f0c0-4a8b-9862-5ea47bde417f.webp",
+      title: "أداء يتخطى الحدود",
+      subtitle: "معالج Snapdragon 8 Elite Gen 5 المخصص لـ Galaxy مع أداء أسرع للذكاء الاصطناعي والألعاب.",
+      highlight: "أداء أقوى"
+    }
+  ],
+},
+  "galaxy-s26-plus": {
+    label: "سامسونج جالاكسي اس 26 بلس",
+    keywords: ["s26+", "s26 plus", "galaxy s26+", "اس 26 بلس"],
+    hero: [
+      { image: "https://res.cloudinary.com/bzwltpqf/image/upload/v1788914599/ecbbc1a9-042c-4237-b19c-4d5ee549e4ea.jpg", title: "سامسونج جالاكسي اس 26 بلس", subtitle: "شاشة أكبر وبطارية أقوى.", highlight: "بطارية أقوى" },
+    ],
+  },
+  "galaxy-s26": {
+    label: "سامسونج جالاكسي اس 26",
+    keywords: ["سامسونج جالاكسي s26"],
+    hero: [
+      { image: "https://res.cloudinary.com/bzwltpqf/image/upload/v1788914599/c26f2256-2559-4cad-ba65-8bd6f14f654e.jpg", title: "سامسونج جالاكسي اس 26", subtitle: "تجربة سامسونج الجديدة بالكامل.", highlight: "الجديدة" },
+    ],
+  },
+
+
+
+
+
+  "galaxy-s25-ultra": {
+    label: "سامسونج جالاكسي اس 25 الترا",
+    keywords: ["s25 ultra", "galaxy s25 ultra", "اس 25 الترا", "جالاكسي s25 ultra"],
+    hero: [
+      { image: "https://res.cloudinary.com/bzwltpqf/image/upload/v1789004108/774ae890-ae7b-40b8-ade9-78f654fffe58.webp", title: "سامسونج جالاكسي اس 25 الترا", subtitle: "قوة استثنائية وقلم S Pen مدمج.", highlight: "S Pen" },
+    ],
+  },
+  "galaxy-s25-plus": {
+    label: "سامسونج جالاكسي اس 25 بلس",
+    keywords: ["s25+", "s25 plus", "galaxy s25+", "اس 25 بلس"],
+    hero: [
+      { image: "https://res.cloudinary.com/bzwltpqf/image/upload/v1789004307/04d2f2c8-9771-49f1-80db-48d78879e449.webp", title: "سامسونج جالاكسي اس 25 بلس", subtitle: "شاشة أكبر وأداء أقوى.", highlight: "أداء أقوى" },
+    ],
+  },
+  "galaxy-s25": {
+    label: "سامسونج جالاكسي اس 25",
+    keywords: ["galaxy s25", "جالاكسي s25", "اس 25"],
+    hero: [
+      { image: "https://res.cloudinary.com/bzwltpqf/image/upload/v1789004307/04d2f2c8-9771-49f1-80db-48d78879e449.webp", title: "سامسونج جالاكسي اس 25", subtitle: "تجربة سامسونج المتكاملة.", highlight: "المتكاملة" },
+    ],
+  },
+
+
+  
+  "17": {
+    label: "آيفون 17",
+    keywords: ["ايفون 17", "آيفون 17", "iphone 17"],
+    hero: [
+     { 
+  image: "/iphone-17/i-hero1.webp",
+  title: "ملك جمال اللون.",
+  subtitle: "ألوان تخطف الأنظار",
+  highlight: "تخطف الأنظار"
+},
+{ 
+  image: "/iphone-17/i-hero4.webp",
+  title: "الجديد، بالمختصر المفيد.",
+  subtitle: "ستايل جديد. يبهرك بالمزيد.",
+  highlight: "يبهرك بالمزيد"
+},
+{ 
+  image: "/iphone-17/i-hero2.webp",
+  title: "أصلب. وإلى القلب أقرب.",
+  subtitle: "تصميم ينفرد بخطوط انسيابية",
+  highlight: "أصلب"
+},
+{ 
+  image: "/iphone-17/i-hero5.webp",
+  title: "شاشة أكبر. تجربة أمتع.",
+  subtitle: "سوبر ريتنا XDR مع ProMotion حتى 120Hz",
+  highlight: "تجربة أمتع"
+},
+{ 
+  image: "/iphone-17/i-hero3.webp",
+  title: "من بعيد أو قريب، يبهرك.",
+  subtitle: "نظام كاميرا Fusion مزدوجة 48MP",
+  highlight: "يبهرك عندما تصوّر"
+},
+    ],
+  },
+};
+
+export async function generateStaticParams() {
+  return Object.keys(MODEL_MAP).map((model) => ({ model }));
+}
+
+export default async function ShopModelPage({
+  params,
+}: {
+  params: Promise<{ model: string }>;
+}) {
+  const { model } = await params;
+  const config = MODEL_MAP[model];
+  if (!config) notFound();
+
+  const allProducts: Product[] = await getCachedProducts();
+
+  const products = allProducts.filter((p) => {
+    const name = (p.name || "").toLowerCase();
+    const category = (p.category || "").toLowerCase();
+    return config.keywords.some(
+      (kw) =>
+        name.includes(kw.toLowerCase()) || category.includes(kw.toLowerCase())
+    );
+  });
+
+  const proOnlyModels = ["17-pro", "16-pro", "15-pro", "14-pro"];
+  const baseOnlyModels = ["17", "16", "15"];
+  const ultraOnlyModels = ["galaxy-s26-ultra", "galaxy-s25-ultra"];
+
+  const galaxyPlusModels = ["galaxy-s26-plus", "galaxy-s25-plus"];
+  const galaxyBaseModels = ["galaxy-s26", "galaxy-s25"];
+
+  const filtered = proOnlyModels.includes(model)
+    ? products.filter(
+        (p) =>
+          !(p.name || "").toLowerCase().includes("ماكس") &&
+          !(p.name || "").toLowerCase().includes("max")
+      )
+    : baseOnlyModels.includes(model)
+    ? products.filter((p) => {
+        const name = (p.name || "").toLowerCase();
+        return (
+          !name.includes("برو") &&
+          !name.includes("pro") &&
+          !name.includes("بلس") &&
+          !name.includes("plus") &&
+          !name.includes("اير") &&
+          !name.includes("إير") &&
+          !name.includes("air")
+        );
+      })
+    : ultraOnlyModels.includes(model)
+    ? products.filter((p) => {
+        const name = (p.name || "").toLowerCase();
+        return (
+          name.includes("ultra") ||
+          name.includes("الترا") ||
+          name.includes("ألترا")
+        );
+      })
+    : galaxyPlusModels.includes(model)
+    ? products.filter((p) => {
+        const name = (p.name || "").toLowerCase();
+        return (
+          (name.includes("plus") || name.includes("بلس")) &&
+          !name.includes("ultra") &&
+          !name.includes("الترا") &&
+          !name.includes("ألترا")
+        );
+      })
+    : galaxyBaseModels.includes(model)
+    ? products.filter((p) => {
+        const name = (p.name || "").toLowerCase();
+        const cat = (p.category || "").toLowerCase();
+        return (
+          !name.includes("ultra") &&
+          !name.includes("الترا") &&
+          !name.includes("ألترا") &&
+          !name.includes("plus") &&
+          !name.includes("بلس") &&
+          !cat.includes("ultra") &&
+          !cat.includes("الترا") &&
+          !cat.includes("ألترا") &&
+          !cat.includes("plus") &&
+          !cat.includes("بلس")
+        );
+      })
+    : products;
+
+  const storageOrder = ["64GB", "128GB", "256GB", "512GB", "1TB", "2TB"];
+  const getStorage = (p: Product) => {
+    const match = (p.storage ?? p.name ?? "").match(/\d+\s*(GB|TB|جيجابايت|تيرابايت)/i);
+    return match ? match[0].replace(/\s/g, "").replace(/جيجابايت/i, "GB").replace(/تيرابايت/i, "TB").toUpperCase() : "";
+  };
+  const sorted = [...filtered].sort((a, b) => {
+    const ai = storageOrder.indexOf(getStorage(a));
+    const bi = storageOrder.indexOf(getStorage(b));
+    return (ai === -1 ? 99 : ai) - (bi === -1 ? 99 : bi);
+  });
+
+  return (
+    <ShopModelClient
+      products={sorted}
+      modelName={config.label}
+      hero={config.hero}
+    />
+  );
+}
