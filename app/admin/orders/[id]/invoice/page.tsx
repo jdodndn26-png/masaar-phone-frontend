@@ -59,23 +59,26 @@ export default function InvoicePrintPage() {
   }, [order]);
 
   useEffect(() => {
-    Promise.all([
-      fetch(`/api/admin/orders/${id}`).then((r) => r.json()),
-      fetch("/api/admin/company").then((r) => r.json()).catch(() => ({})),
-    ]).then(async ([o, c]) => {
-      // جيب صور المنتجات
-      const itemsWithImages = await Promise.all(
-        o.items.map(async (item: OrderItem) => {
-          if (!item.productId) return item;
-          try {
-            const p = await fetch(`/api/admin/products/${item.productId}`).then((r) => r.json());
-            return { ...item, image: p.image || p.images?.[0] || "" };
-          } catch { return item; }
-        })
-      );
-      setOrder({ ...o, items: itemsWithImages });
-      setCompany(c);
-    });
+    fetch(`/api/admin/orders/${id}/invoice`)
+      .then((r) => r.json())
+      .then(async ({ order: o, company: c }) => {
+        // جلب صور كل المنتجات في request واحد بدل N+1
+        const productIds = o.items
+          .map((item: OrderItem) => item.productId)
+          .filter(Boolean)
+          .join(",");
+        const imageMap: Record<string, string> = productIds
+          ? await fetch(`/api/admin/products/images?ids=${encodeURIComponent(productIds)}`)
+              .then((r) => r.json())
+              .catch(() => ({}))
+          : {};
+        const itemsWithImages = o.items.map((item: OrderItem) => ({
+          ...item,
+          image: imageMap[item.productId] || "",
+        }));
+        setOrder({ ...o, items: itemsWithImages });
+        setCompany(c);
+      });
   }, [id]);
 
   if (!order) return <div style={{ textAlign: "center", padding: 40, fontFamily: "Arial" }}>جاري التحميل...</div>;

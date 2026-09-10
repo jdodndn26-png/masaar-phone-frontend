@@ -20,7 +20,11 @@ const nextConfig: NextConfig = {
       { protocol: "https", hostname: "placehold.co" },
       { protocol: "https", hostname: "images.samsung.com" },
     ],
-    qualities: [75, 90],
+    // Only generate 2 sizes — reduces Image Transformation count
+    deviceSizes: [640, 1080],
+    imageSizes: [128, 256, 400],
+    qualities: [75],
+    formats: ["image/webp"],
   },
 };
 

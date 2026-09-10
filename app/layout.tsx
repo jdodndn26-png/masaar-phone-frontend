@@ -3,24 +3,15 @@ import Script from "next/script";
 import "./globals.css";
 import ClientLayout from "./components/ClientLayout";
 import Footer from "./components/Footer";
+import { getCachedCompany } from "./lib/products-cache";
 
-const BACKEND = process.env.BACKEND_URL || "http://localhost:5000";
-const SITE_URL = "https://albilaad-ksa.com";
-
-async function getCompany() {
-  try {
-    const r = await fetch(`${BACKEND}/api/admin/company`, { next: { revalidate: 3600, tags: ["company"] } });
-    return r.ok ? r.json() : {};
-  } catch {
-    return {};
-  }
-}
+const SITE_URL = "https://masarphone.com";
 
 export async function generateMetadata(): Promise<Metadata> {
-  const c = await getCompany();
+  const c = await getCachedCompany();
 
-  const siteName = c.nameAr || "مؤسسة البلاد الحديثة للإلكترونيات";
-  const description = c.details || "مؤسسة البلاد الحديثة للإلكترونيات - أجهزة إلكترونية بالأقساط داخل المملكة العربية السعودية. أفضل الأسعار على الجوالات، اللابتوبات، الأجهزة اللوحية والإكسسوارات.";
+  const siteName = c.nameAr || "مسار الهاتف المعتمد";
+  const description = c.details || "مسار الهاتف المعتمد — وجهتك الأولى لأحدث الهواتف الذكية بأقساط ميسرة وضمان معتمد في المملكة العربية السعودية. أفضل الأسعار على الجوالات، اللابتوبات، الأجهزة اللوحية والإكسسوارات.";
 
   const logoUrl = c.logo
     ? (c.logo.startsWith("http") ? c.logo : `${SITE_URL}${c.logo}`)
@@ -35,8 +26,8 @@ export async function generateMetadata(): Promise<Metadata> {
     description,
     keywords: [
       siteName,
-      c.nameEn || "Al Bilad Modern Electronics",
-      "البلاد", "البلاد الحديثة", "أقساط", "جوالات", "لابتوب", "أجهزة إلكترونية",
+      c.nameEn || "Masar Phone",
+      "مسار", "مسار الهاتف", "أقساط", "جوالات", "لابتوب", "أجهزة إلكترونية",
       "سامسونج", "آبل", "أيفون", "شاومي",
       "السعودية", "الرياض", "جدة",
     ],
@@ -50,17 +41,19 @@ export async function generateMetadata(): Promise<Metadata> {
     },
     icons: {
       icon: [
-        { url: "/favicon-16x16.png", sizes: "16x16", type: "image/png" },
-        { url: "/favicon-32x32.png", sizes: "32x32", type: "image/png" },
         { url: "/favicon.ico" },
+        { url: "/icon1.png", type: "image/png" },
       ],
-      apple: [{ url: "/apple-touch-icon.png", sizes: "180x180", type: "image/png" }],
+      apple: [{ url: "/apple-icon.png", sizes: "180x180", type: "image/png" }],
       other: [
-        { rel: "android-chrome-192x192", url: "/android-chrome-192x192.png" },
-        { rel: "android-chrome-512x512", url: "/android-chrome-512x512.png" },
+        { rel: "apple-mobile-web-app-title", url: "مسار الهاتف المعتمد" },
       ],
     },
-    manifest: "/site.webmanifest",
+    manifest: "/manifest.json",
+    appleWebApp: {
+      title: "مسار الهاتف المعتمد",
+      statusBarStyle: "default",
+    },
     openGraph: {
       type: "website",
       locale: "ar_SA",
@@ -93,15 +86,23 @@ export async function generateMetadata(): Promise<Metadata> {
   };
 }
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{ children: React.ReactNode }>) {
+  const c = await getCachedCompany();
+  const API_BASE = process.env.BACKEND_URL || "http://localhost:5000";
+  const logo = c.logo
+    ? (c.logo.startsWith("http") ? c.logo : `${API_BASE}${c.logo}`)
+    : "";
+  const whatsapp: string = c.whatsapp || "";
+
   return (
     <html lang="ar" dir="rtl">
       <head>
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
         <link href="https://fonts.googleapis.com/css2?family=Almarai:wght@300;400;700;800&display=swap" rel="stylesheet" />
+        <meta name="apple-mobile-web-app-title" content="مسار الهاتف المعتمد" />
         <Script
           src="https://www.googletagmanager.com/gtag/js?id=AW-18394753580"
           strategy="afterInteractive"
@@ -114,7 +115,7 @@ export default function RootLayout({
         </Script>
       </head>
       <body className="antialiased" style={{ fontFamily: '"Almarai", sans-serif' }} suppressHydrationWarning>
-        <ClientLayout footer={<Footer />}>{children}</ClientLayout>
+        <ClientLayout footer={<Footer />} whatsapp={whatsapp} logo={logo}>{children}</ClientLayout>
       </body>
     </html>
   );

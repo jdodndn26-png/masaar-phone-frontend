@@ -1,108 +1,50 @@
 import { ProductGrid } from "./components/products";
 import CustomerReviews from "./components/CustomerReviews";
 import HeroSection from "./components/HeroSection";
-import ShopByModel from "./components/ShopByModel";
+import ShopByModel from "./components/shop-by-model/ShopByModel";
 import AnimatedSection from "./components/AnimatedSection";
 import HomeBackground from "./components/HomeBackground";
-import { getCachedProducts } from "./lib/products-cache";
+import {
+  getCachedProducts,
+  getCachedBanners,
+  getCachedReviews,
+  getCachedHomeConfig,
+  getCachedCategoryBanners,
+} from "./lib/products-cache";
 
-export const dynamic = "force-dynamic";
 const BACKEND = process.env.BACKEND_URL || "http://localhost:5000";
-const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://albilaad-ksa.com";
-
-async function getCompany() {
-  try {
-    const r = await fetch(`${BACKEND}/api/admin/company`, { next: { revalidate: 3600 } });
-    return r.ok ? r.json() : {};
-  } catch {
-    return {};
-  }
-}
-
-async function getHomeConfig() {
-  try {
-    const [settingsRes, maxRes] = await Promise.all([
-      fetch(`${BACKEND}/api/admin/sub-categories/home-settings`, { next: { tags: ["home-settings"], revalidate: 3600 } }),
-      fetch(`${BACKEND}/api/admin/sub-categories/max`, { next: { tags: ["home-settings"], revalidate: 3600 } }),
-    ]);
-    const settings = settingsRes.ok ? await settingsRes.json() : [];
-    const { max = 4 } = maxRes.ok ? await maxRes.json() : {};
-    return { settings, max };
-  } catch {
-    return { settings: [], max: 4 };
-  }
-}
-
-async function getBanners() {
-  try {
-    const r = await fetch(`${BACKEND}/api/admin/banners`, { cache: "no-store" });
-    return r.ok ? r.json() : [];
-  } catch {
-    return [];
-  }
-}
-
-async function getBannerMap(categories: string[]) {
-  if (!categories.length) return {};
-  try {
-    const r = await fetch(
-      `${BACKEND}/api/admin/category-banners-bulk?categories=${encodeURIComponent(categories.join(","))}`,
-      { cache: "no-store" }
-    );
-    return r.ok ? r.json() : {};
-  } catch {
-    return {};
-  }
-}
+const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://masarphone.com";
 
 export default async function Home() {
-  const [c, products, homeConfig, rawBanners] = await Promise.all([
-    getCompany(),
+  const [products, homeConfig, rawBanners, reviews] = await Promise.all([
     getCachedProducts(),
-    getHomeConfig(),
-    getBanners(),
+    getCachedHomeConfig(),
+    getCachedBanners(),
+    getCachedReviews(),
   ]);
+
   const heroBanners = (rawBanners as { url: string; active: boolean }[]).map((b) => ({
     ...b,
     url: b.url ? (b.url.startsWith("http") ? b.url : `${BACKEND}${b.url}`) : "",
   }));
-  const categories = [...new Set((products as { category?: string }[]).map((p) => p.category).filter(Boolean))] as string[];
-  const bannerMap = await getBannerMap(categories);
-  const siteName = c.nameAr || "مؤسسة البلاد الحديثة للإلكترونيات";
-  const logoUrl = c.logo
-    ? (c.logo.startsWith("http") ? c.logo : `${BACKEND}${c.logo}`)
-    : "";
+
+  const categories = [
+    ...new Set(
+      (products as { category?: string }[]).map((p) => p.category).filter(Boolean)
+    ),
+  ] as string[];
+
+  const bannerMap: Record<string, string[]> = categories.length
+    ? await getCachedCategoryBanners(categories.join(","))
+    : {};
+
+  const siteName = "مسار الهاتف المعتمد";
 
   const jsonLd = {
     "@context": "https://schema.org",
     "@type": "Organization",
     name: siteName,
-    alternateName: c.nameEn || "Al Bilad Modern Electronics",
     url: SITE_URL,
-    logo: logoUrl,
-    contactPoint: [
-      c.phone && {
-        "@type": "ContactPoint",
-        telephone: c.phone,
-        contactType: "customer service",
-        areaServed: "SA",
-        availableLanguage: "Arabic",
-      },
-      c.whatsapp && {
-        "@type": "ContactPoint",
-        telephone: c.whatsapp,
-        contactType: "sales",
-        areaServed: "SA",
-        availableLanguage: "Arabic",
-      },
-    ].filter(Boolean),
-    address: c.addressAr ? {
-      "@type": "PostalAddress",
-      addressLocality: c.addressAr,
-      addressCountry: "SA",
-    } : undefined,
-    email: c.email || undefined,
-    sameAs: c.website ? [c.website] : [],
   };
 
   const webSiteJsonLd = {
@@ -136,11 +78,11 @@ export default async function Home() {
         <AnimatedSection delay={0.1}>
           <ShopByModel />
         </AnimatedSection>
-        <AnimatedSection delay={0.1}>
+        <AnimatedSection delay={0.2}>
           <ProductGrid products={products} homeConfig={homeConfig} bannerMap={bannerMap} />
         </AnimatedSection>
         <AnimatedSection delay={0.1}>
-          <CustomerReviews />
+          <CustomerReviews initialReviews={reviews} />
         </AnimatedSection>
       </main>
     </>

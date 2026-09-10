@@ -13,39 +13,32 @@ import ProductSections from "./components/ProductSections";
 
 const API = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000";
 
+const resolveImg = (src: string) => src.startsWith("http") ? src : `${API}${src}`;
+
 export default function ProductPageClient({
   id,
   initialProduct,
-  initialColor,
-  initialStorage,
 }: {
   id: string;
   initialProduct: Product | null;
-  initialColor?: string;
-  initialStorage?: string;
 }) {
   const router = useRouter();
 
   const product = initialProduct;
   const firstVariant = product?.variants?.[0];
+  const toKey = (o: { storage: string; ram?: string; size?: string }) =>
+    `${o.storage}|${o.ram ?? ""}|${o.size ?? ""}`;
 
-  const [selectedColor, setSelectedColor] = useState<string>(() => {
-    if (initialColor) {
-      const exists = product?.variants?.some((v) => v.color === initialColor);
-      return exists ? initialColor : (firstVariant?.color ?? product?.color ?? "");
-    }
-    return firstVariant?.color ?? product?.color ?? "";
-  });
+  const [selectedColor, setSelectedColor] = useState<string>(
+    () => firstVariant?.color ?? product?.color ?? ""
+  );
 
   const [selectedStorage, setSelectedStorage] = useState<string>(() => {
-    const firstVariantStorage = product?.variants?.[0];
-    if (initialStorage) {
-      const exists = firstVariantStorage?.storageOptions?.some((s) => s.storage === initialStorage);
-      return exists ? initialStorage : (firstVariantStorage?.storageOptions?.find(o => o.storage === firstVariantStorage?.defaultStorage)?.storage ?? firstVariantStorage?.storageOptions?.[0]?.storage ?? product?.storage ?? "");
-    }
-    const defStorage = firstVariantStorage?.defaultStorage;
-    if (defStorage && firstVariantStorage?.storageOptions?.some(o => o.storage === defStorage)) return defStorage;
-    return firstVariantStorage?.storageOptions?.[0]?.storage ?? product?.storage ?? "";
+    const defStorage = firstVariant?.defaultStorage;
+    const defOpt =
+      firstVariant?.storageOptions?.find((o) => o.storage === defStorage) ??
+      firstVariant?.storageOptions?.[0];
+    return defOpt ? toKey(defOpt) : product?.storage ?? "";
   });
 
   if (!product)
@@ -56,10 +49,8 @@ export default function ProductPageClient({
     );
 
   const activeVariant = product.variants?.find((v) => v.color === selectedColor);
-  const baseStorageOptions = product.variants?.[0]?.storageOptions ?? [];
-  const activeStorage = baseStorageOptions.find((s) => s.storage === selectedStorage);
-
-  const resolveImg = (src: string) => src.startsWith("http") ? src : `${API}${src}`;
+  const activeStorageOptions = activeVariant?.storageOptions ?? product.variants?.[0]?.storageOptions ?? [];
+  const activeStorage = activeStorageOptions.find((s) => `${s.storage}|${s.ram ?? ""}|${s.size ?? ""}` === selectedStorage) ?? activeStorageOptions.find((s) => s.storage === selectedStorage);
 
   const merged = activeVariant?.images?.length
     ? activeVariant.images
@@ -69,7 +60,7 @@ export default function ProductPageClient({
   const displayProduct: Product = {
     ...product,
     color: selectedColor || product.color,
-    storage: selectedStorage || product.storage,
+    storage: activeStorage?.storage || selectedStorage.split("|")[0] || product.storage,
     originalPrice: activeStorage?.originalPrice ?? product.originalPrice,
     salePrice: activeStorage?.salePrice ?? product.salePrice,
     image: activeVariant?.images?.[0] ?? product.image,
@@ -134,7 +125,14 @@ export default function ProductPageClient({
               product={displayProduct}
               selectedColor={selectedColor}
               selectedStorage={selectedStorage}
-              onColorChange={(c) => setSelectedColor(c)}
+              onColorChange={(c) => {
+                setSelectedColor(c);
+                const newVariant = product.variants?.find((v) => v.color === c);
+                const opts = newVariant?.storageOptions ?? [];
+                const def = newVariant?.defaultStorage;
+                const defOpt = opts.find((o) => o.storage === def) ?? opts[0];
+                if (defOpt) setSelectedStorage(`${defOpt.storage}|${defOpt.ram ?? ""}`);
+              }}
               onStorageChange={(s) => setSelectedStorage(s)}
             />
           </div>

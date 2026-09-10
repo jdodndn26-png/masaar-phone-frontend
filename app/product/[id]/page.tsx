@@ -1,30 +1,26 @@
 import type { Metadata } from "next";
 import ProductPageClient from "./ProductPageClient";
-import { getCachedProduct } from "../../lib/products-cache";
+import { getCachedProduct, getCachedCompany } from "../../lib/products-cache";
 
-export const revalidate = false;
-
+const SITE_URL = "https://masarphone.com";
 const BACKEND = process.env.BACKEND_URL || "http://localhost:5000";
-const SITE_URL = "https://albilaad-ksa.com";
 
-async function getCompany() {
-  try {
-    const r = await fetch(`${BACKEND}/api/admin/company`, { next: { revalidate: 3600 } });
-    return r.ok ? r.json() : {};
-  } catch {
-    return {};
-  }
-}
+export const revalidate = 300;
 
-export async function generateMetadata({ params }: { params: Promise<{ id: string }> }): Promise<Metadata> {
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ id: string }>;
+}): Promise<Metadata> {
   const { id } = await params;
-  const [product, company] = await Promise.all([getCachedProduct(id), getCompany()]);
+  const [product, company] = await Promise.all([
+    getCachedProduct(id),
+    getCachedCompany(),
+  ]);
 
-  if (!product) {
-    return { title: "المنتج غير موجود" };
-  }
+  if (!product) return { title: "المنتج غير موجود" };
 
-  const siteName = company.nameAr || "مؤسسة البلاد الحديثة للإلكترونيات";
+  const siteName = company.nameAr || "مسار الهاتف المعتمد";
   const title = product.name;
 
   const parts: string[] = [];
@@ -32,8 +28,7 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
   if (product.storage) parts.push(product.storage);
   if (product.color) parts.push(product.color);
   if (product.salePrice || product.price) {
-    const price = product.salePrice || product.price;
-    parts.push(`${price} ريال`);
+    parts.push(`${product.salePrice || product.price} ريال`);
   }
   if (product.installment?.available) parts.push("بالأقساط");
 
@@ -74,40 +69,43 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
   };
 }
 
-export default async function ProductPage({ 
-  params, 
-  searchParams 
-}: { 
+export default async function ProductPage({
+  params,
+}: {
   params: Promise<{ id: string }>;
-  searchParams: Promise<{ color?: string; storage?: string }>;
 }) {
   const { id } = await params;
-  const { color, storage } = await searchParams;
-  const [product, company] = await Promise.all([getCachedProduct(id), getCompany()]);
+  // Single parallel fetch — getCachedCompany is shared with generateMetadata
+  const [product, company] = await Promise.all([
+    getCachedProduct(id),
+    getCachedCompany(),
+  ]);
 
-  const siteName = company.nameAr || "مؤسسة البلاد الحديثة للإلكترونيات";
+  const siteName = company.nameAr || "مسار الهاتف المعتمد";
   const price = product?.salePrice || product?.price || 0;
   const rawImg = product?.images?.[0] || product?.image || "";
   const imageUrl = rawImg.startsWith("http") ? rawImg : rawImg ? `${BACKEND}${rawImg}` : "";
 
-  const jsonLd = product ? {
-    "@context": "https://schema.org",
-    "@type": "Product",
-    name: product.name,
-    description: product.description || product.name,
-    image: imageUrl,
-    brand: product.brand ? { "@type": "Brand", name: product.brand } : undefined,
-    offers: {
-      "@type": "Offer",
-      url: `${SITE_URL}/product/${id}`,
-      priceCurrency: "SAR",
-      price: price,
-      availability: product.inStock
-        ? "https://schema.org/InStock"
-        : "https://schema.org/OutOfStock",
-      seller: { "@type": "Organization", name: siteName },
-    },
-  } : null;
+  const jsonLd = product
+    ? {
+        "@context": "https://schema.org",
+        "@type": "Product",
+        name: product.name,
+        description: product.description || product.name,
+        image: imageUrl,
+        brand: product.brand ? { "@type": "Brand", name: product.brand } : undefined,
+        offers: {
+          "@type": "Offer",
+          url: `${SITE_URL}/product/${id}`,
+          priceCurrency: "SAR",
+          price,
+          availability: product.inStock
+            ? "https://schema.org/InStock"
+            : "https://schema.org/OutOfStock",
+          seller: { "@type": "Organization", name: siteName },
+        },
+      }
+    : null;
 
   return (
     <>
@@ -117,7 +115,8 @@ export default async function ProductPage({
           dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
         />
       )}
-      <ProductPageClient id={id} initialProduct={product} initialColor={color} initialStorage={storage} />
+      {/* color/storage selection is pure client state — no searchParams on server */}
+      <ProductPageClient id={id} initialProduct={product} />
     </>
   );
 }

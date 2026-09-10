@@ -9,7 +9,7 @@ export default function robots(): MetadataRoute.Robots {
         disallow: ["/admin/", "/api/", "/checkout/verify/"],
       },
     ],
-    sitemap: "https://albilaad-ksa.com/sitemap.xml",
-    host: "https://albilaad-ksa.com",
+    sitemap: "https://masarphone.com/sitemap.xml",
+    host: "https://masarphone.com",
   };
 }

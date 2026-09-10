@@ -1,7 +1,8 @@
 "use client";
-import { useEffect, useState } from "react";
+import { useState, useRef } from "react";
 import { Swiper, SwiperSlide } from "swiper/react";
 import { Autoplay, Keyboard, Pagination } from "swiper/modules";
+import type { Swiper as SwiperType } from "swiper";
 import "swiper/css";
 import "swiper/css/pagination";
 
@@ -14,20 +15,30 @@ interface Review {
   createdAt: string;
 }
 
-export default function CustomerReviews() {
-  const [reviews, setReviews] = useState<Review[]>([]);
+export default function CustomerReviews({ initialReviews = [] }: { initialReviews?: Review[] }) {
+  const [reviews] = useState<Review[]>(initialReviews);
   const [showForm, setShowForm] = useState(false);
   const [form, setForm] = useState({ name: "", comment: "", rating: 5 });
   const [submitting, setSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
   const [selectedReview, setSelectedReview] = useState<Review | null>(null);
+  const swiperRef = useRef<SwiperType | null>(null);
+  const sectionRef = useRef<HTMLElement | null>(null);
 
-  useEffect(() => {
-    fetch(`/api/reviews`)
-      .then((r) => r.json())
-      .then((data) => Array.isArray(data) && setReviews(data))
-      .catch(() => {});
-  }, []);
+  const handleSwiperInit = (swiper: SwiperType) => {
+    swiperRef.current = swiper;
+    const el = sectionRef.current;
+    if (!el) return;
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (!swiperRef.current) return;
+        if (entry.isIntersecting) swiperRef.current.autoplay.start();
+        else swiperRef.current.autoplay.stop();
+      },
+      { threshold: 0.1 }
+    );
+    observer.observe(el);
+  };
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -52,7 +63,7 @@ export default function CustomerReviews() {
       : "from-purple-500 to-indigo-500";
 
   return (
-    <section className="w-full py-6" dir="rtl">
+    <section className="w-full py-6" dir="rtl" ref={sectionRef}>
     <div className="max-w-6xl mx-auto px-3 sm:px-4">
       <div className="flex items-center gap-2 sm:gap-3 mb-6">
         <div className="flex-1 h-px bg-gray-300" />
@@ -76,6 +87,7 @@ export default function CustomerReviews() {
             keyboard={{ enabled: true }}
             pagination={{ clickable: true }}
             loop={reviews.length > 3}
+            onSwiper={handleSwiperInit}
             className="pb-10!"
           >
             {reviews.map((r) => (

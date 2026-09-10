@@ -28,7 +28,7 @@ function DesignSection({ section }: { section: ProductSection }) {
   const features: {
     id: string; label: string; title: string; image: string;
     colors?: { name: string; colorCode: string; image: string; title?: string }[];
-  }[] = (section.content as Record<string, unknown>)?.features as never[] ?? [];
+  }[] = ((section.content as Record<string, unknown>)?.features as never[] ?? []).flat();
 
   const [active, setActive] = useState(0);
   const [colorIdx, setColorIdx] = useState(0);

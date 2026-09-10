@@ -41,13 +41,29 @@ export default function OrdersPage() {
   const perPage = 10;
 
   useEffect(() => {
-    const load = () =>
-      fetch("/api/admin/orders")
+    let aborted = false;
+    const controller = new AbortController();
+
+    const load = () => {
+      const ctrl = new AbortController();
+      fetch("/api/admin/orders?limit=100", { signal: ctrl.signal })
         .then((r) => r.json())
-        .then((d) => setOrders(Array.isArray(d) ? d : []));
-    load();
-    const interval = setInterval(load, 10000);
-    return () => clearInterval(interval);
+        .then((d) => { if (!aborted) setOrders(Array.isArray(d) ? d : []); })
+        .catch(() => {});
+      return ctrl;
+    };
+
+    let current = load();
+    const interval = setInterval(() => {
+      current.abort();
+      current = load();
+    }, 30000);
+
+    return () => {
+      aborted = true;
+      current.abort();
+      clearInterval(interval);
+    };
   }, []);
 
   const filtered = orders.filter(

@@ -1,8 +1,8 @@
 import TaqseetClient from "./TaqseetClient";
 
 export const metadata = {
-  title: "خطط التقسيط | مؤسسة البلاد الحديثة للإلكترونيات",
-  description: "تقسيط بدون فوائد على جميع الأجهزة بدفعة مقدمة فقط",
+  title: "خطط التقسيط | مسار الهاتف المعتمد",
+  description: "تقسيط بدون فوائد على جميع الأجهزة بدفعة مقدمة فقط — مسار الهاتف المعتمد.",
 };
 
 export default function TaqseetPage() {

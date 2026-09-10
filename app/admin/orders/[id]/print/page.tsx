@@ -16,13 +16,12 @@ export default function PrintOrderPage() {
   const [company, setCompany] = useState<Company>({});
 
   useEffect(() => {
-    Promise.all([
-      fetch(`/api/admin/orders/${id}`).then((r) => r.json()),
-      fetch("/api/admin/company").then((r) => r.json()).catch(() => ({})),
-    ]).then(([o, c]) => {
-      setOrder(o);
-      setCompany(c);
-    });
+    fetch(`/api/admin/orders/${id}/invoice`)
+      .then((r) => r.json())
+      .then(({ order: o, company: c }) => {
+        setOrder(o);
+        setCompany(c);
+      });
   }, [id]);
 
   useEffect(() => {

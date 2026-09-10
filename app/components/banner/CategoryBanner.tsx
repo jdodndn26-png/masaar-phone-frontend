@@ -22,27 +22,23 @@ export default function CategoryBanner({ category, images }: { category: string;
         style={{
           borderRadius: "20px",
           boxShadow: "0 8px 40px rgba(0,0,0,0.18), 0 2px 8px rgba(0,0,0,0.10)",
+          aspectRatio: "16/9",
         }}
       >
         {images.map((src, i) => (
           <div
             key={i}
-            className="transition-opacity duration-700"
-            style={{
-              opacity: i === current ? 1 : 0,
-              position: i === 0 ? "relative" : "absolute",
-              inset: i === 0 ? undefined : 0,
-              zIndex: i === current ? 1 : 0,
-            }}
+            className="absolute inset-0 transition-opacity duration-700"
+            style={{ opacity: i === current ? 1 : 0, zIndex: i === current ? 1 : 0 }}
           >
             <Image
               src={src}
               alt={`${category} بانر ${i + 1}`}
-              width={1600}
-              height={900}
-              className="w-full h-auto block"
+              fill
+              className="object-cover"
               sizes="(max-width: 640px) 100vw, (max-width: 1024px) 90vw, 1400px"
-              priority={i === 0}
+              loading="lazy"
+              quality={75}
             />
           </div>
         ))}

@@ -10,7 +10,7 @@ import MobileMenu from "./MobileMenu";
 import { useCartStore } from "../../store/cartStore";
 import { useCompanyStore } from "../../store/companyStore";
 
-export default function Navbar() {
+export default function Navbar({ initialLogo }: { initialLogo?: string }) {
   const [mobileOpen, setMobileOpen] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
@@ -20,10 +20,16 @@ export default function Navbar() {
   const searchWrapRef = useRef<HTMLDivElement>(null);
   const mounted = useSyncExternalStore(() => () => {}, () => true, () => false);
   const itemCount = useCartStore((s) => s.items.reduce((sum, i) => sum + i.qty, 0));
-  const { logo, fetchCompany } = useCompanyStore();
+  const { logo: storeLogo, setLogo } = useCompanyStore();
+  const logo = storeLogo || initialLogo || "";
 
   const API_IMG = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000";
   const resolveImg = (src: string) => src.startsWith("http") ? src : `${API_IMG}${src.startsWith("/") ? src : "/" + src}`;
+
+  // Seed the store with the SSR logo so admin updates still work
+  useEffect(() => {
+    if (initialLogo && !storeLogo) setLogo(initialLogo);
+  }, [initialLogo, storeLogo, setLogo]);
 
   useEffect(() => {
     if (searchOpen) searchInputRef.current?.focus();
@@ -40,24 +46,25 @@ export default function Navbar() {
     return () => document.removeEventListener("mousedown", handler);
   }, []);
 
-  const fetchResults = useCallback(async (q: string) => {
-    if (!q.trim()) { setResults([]); return; }
+  const fetchResults = useCallback(async (q: string, signal: AbortSignal) => {
+    if (q.trim().length < 2) { setResults([]); return; }
     setSearching(true);
     try {
-      const res = await fetch(`/api/products?q=${encodeURIComponent(q.trim())}`);
+      const res = await fetch(`/api/products?q=${encodeURIComponent(q.trim())}`, { signal });
       const data = await res.json();
       setResults(Array.isArray(data) ? data : []);
+    } catch (e) {
+      if ((e as Error).name !== "AbortError") setResults([]);
     } finally {
       setSearching(false);
     }
   }, []);
 
   useEffect(() => {
-    const timer = setTimeout(() => fetchResults(searchQuery), 300);
-    return () => clearTimeout(timer);
+    const controller = new AbortController();
+    const timer = setTimeout(() => fetchResults(searchQuery, controller.signal), 300);
+    return () => { clearTimeout(timer); controller.abort(); };
   }, [searchQuery, fetchResults]);
-
-  useEffect(() => { fetchCompany(); }, [fetchCompany]);
 
   // Close mobile menu on resize to desktop
   useEffect(() => {

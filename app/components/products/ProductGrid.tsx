@@ -7,83 +7,62 @@ import CategoryBanner from "../banner/CategoryBanner";
 
 const LIMIT = 4;
 
-// map category value → page path for "عرض الكل" link
+const normalize = (s: string) =>
+  s.trim()
+    .replace(/[آأإ]/g, "ا")
+    .replace(/[ى]/g, "ي")
+    .replace(/\s+/g, " ")
+    .toLowerCase();
+
 const categoryPageMap: Record<string, string> = {
-  // English keys
-  smartphone: "/smartphones/apple-only",
-  smartphones: "/smartphones/apple-only",
-  watch: "/apple-watches/se",
-  audio: "/audio/airpods-pro",
-  speaker: "/audio/airpods-max",
-  earbuds: "/audio/samsung-buds",
-  ps5: "/playstation/ps5",
-  ps4: "/playstation/ps5-slim",
-  xbox: "/playstation/xbox-one",
-  controller: "/playstation/controllers",
-  "gaming-accessories": "/playstation/ps-accessories",
-  laptop: "/laptops/macbook-pro",
-  monitor: "/laptops/samsung-monitors",
-  tablet: "/tablets/ipad-pro",
-  powerbank: "/accessories/anker-batteries",
-  gaming: "/games/ps5-games",
-  "mice-keyboards": "/games/mice-keyboards",
-  microphone: "/games/microphones",
-  figures: "/games/figures",
-  rgb: "/games/rgb-lighting",
-  // Arabic category names from products
-  "ابل ايفون 17 برو": "/smartphones/iphone-17-pro",
-  "ابل ايفون 17 برو ماكس": "/smartphones/iphone-17-pro-max",
-  "ابل ايفون 17برو ماكس": "/smartphones/iphone-17-pro-max",
-  "ابل ايفون 17": "/smartphones/iphone-17",
-  "ابل ايفون 17 اير": "/smartphones/iphone-17-air",
-  "ابل ايفون 16 برو": "/smartphones/iphone-16-pro",
-  "ابل ايفون 16 برو ماكس": "/smartphones/iphone-16-pro-max",
-  "ابل ايفون 16": "/smartphones/iphone-16",
-  "ابل ايفون 16 بلس": "/smartphones/iphone-16-plus",
-  "ابل ايفون 15 برو": "/smartphones/iphone-15-pro",
-  "ابل ايفون 15 برو ماكس": "/smartphones/iphone-15-pro-max",
-  "ابل ايفون 15": "/smartphones/iphone-15",
-  "ابل ايفون 15 بلس": "/smartphones/iphone-15-plus",
-  "ابل ايفون 14 برو": "/smartphones/iphone-14-pro",
-  "ابل ايفون 14 برو ماكس": "/smartphones/iphone-14-pro-max",
-  "ابل ايفون 14": "/smartphones/iphone-14",
-  "ابل ايفون 14 بلس": "/smartphones/iphone-14-plus",
-  "ابل ايفون 13 برو ماكس": "/smartphones/iphone-13-pro-max",
-  "سامسونج جالكسي": "/smartphones/samsung-s25-ultra",
-  "سامسونج جالاكسي": "/smartphones/samsung-s25-ultra",
-  "سامسونج جالاكسي S26": "/smartphones/samsung-s26-ultra",
-  "سامسونج جالاكسي S26 الترا": "/smartphones/samsung-s26-ultra",
-  "سامسونج جالاكسي اس 26 الترا": "/smartphones/samsung-s26-ultra",
-  "سامسونج جالاكسي S25": "/smartphones/samsung-s25-ultra",
-  "سامسونج جالاكسي S25 الترا": "/smartphones/samsung-s25-ultra",
-  "ساعات ابل": "/apple-watches/se",
-  "سماعات ابل": "/audio/airpods-pro",
-  "بلاي ستيشن": "/playstation/ps5",
-  "بلاي ستيشن وملحقاته": "/playstation/ps5",
-  "بلاستيشن وملحقاته": "/playstation",
-  "بلاستيشن": "/playstation",
-  "لابتوبات": "/laptops/macbook-pro",
-  "ايبادات": "/tablets/ipad-pro",
-  "ملحقات": "/accessories/anker-batteries",
-  "العاب": "/games/ps5-games",
+  "ابل ايفون 17 برو ماكس": "/shop/17-pro-max",
+  "ابل ايفون 17 برو": "/shop/17-pro",
+  "ابل ايفون 17 اير": "/shop/17-air",
+  "ابل ايفون 17": "/shop/17",
+  "ابل ايفون 16 برو ماكس": "/shop/16-pro-max",
+  "ابل ايفون 16 برو": "/shop/16-pro",
+  "ابل ايفون 16 بلس": "/shop/16-plus",
+  "ابل ايفون 16": "/shop/16",
+  "ابل ايفون 15 برو ماكس": "/shop/15-pro-max",
+  "ابل ايفون 15 برو": "/shop/15-pro",
+  "ابل ايفون 15 بلس": "/shop/15-plus",
+  "ابل ايفون 15": "/shop/15",
+  "ماك بوك إير": "/shop/macbook-air",
+  "ماك بوك اير": "/shop/macbook-air",
+  "macbook air": "/shop/macbook-air",
+  "ماك بوك برو": "/shop/macbook-pro",
+  "macbook pro": "/shop/macbook-pro",
+  "laptop": "/shop/macbook-pro",
+  "سامسونج جالاكسي s26 الترا": "/shop/galaxy-s26-ultra",
+  "سامسونج جالاكسي s26 بلس": "/shop/galaxy-s26-plus",
+  "سامسونج جالاكسي s26": "/shop/galaxy-s26",
+  "سامسونج جالاكسي s25 الترا": "/shop/galaxy-s25-ultra",
+  "سامسونج جالاكسي s25 بلس": "/shop/galaxy-s25-plus",
+  "سامسونج جالاكسي s25": "/shop/galaxy-s25",
 };
+
+// O(1) lookup بدل O(n) loop في كل render
+const normalizedCategoryMap: Map<string, string> = new Map(
+  Object.entries(categoryPageMap).map(([k, v]) => [normalize(k), v])
+);
+
+function getCategoryHref(category: string): string {
+  return normalizedCategoryMap.get(normalize(category)) ?? `/search?q=${encodeURIComponent(category)}`;
+}
 
 const CategoryRow = memo(function CategoryRow({ category, items, isFirst }: { category: string; items: Product[]; isFirst?: boolean }) {
   const visible = items.slice(0, LIMIT);
-  const href = categoryPageMap[category] ?? categoryPageMap[category.toLowerCase()] ?? `/search?q=${encodeURIComponent(category)}`;
+  const href = getCategoryHref(category);
 
   return (
     <div className="mb-8 sm:mb-12">
-      {/* Category Header */}
       <div className="flex items-end justify-between mb-3 sm:mb-4" dir="rtl">
-        {/* Title + underline */}
         <div className="flex flex-col gap-1 sm:gap-1.5">
           <h2 className="text-[clamp(1rem,4vw,1.6rem)] font-black text-[#0a0a0a] leading-none tracking-tight">
             {category}
           </h2>
           <div className="h-[3px] w-8 sm:w-12 rounded-full bg-gradient-to-l from-[#0B43FD] to-[#4f8bff]" />
         </div>
-        {/* View All */}
         <Link
           href={href}
           className="inline-flex items-center gap-1.5 text-[clamp(0.65rem,2.5vw,0.78rem)] font-bold text-[#0B43FD] whitespace-nowrap px-2.5 sm:px-3.5 py-1 sm:py-1.5 rounded-full border border-[#0B43FD]/30 hover:bg-[#0B43FD]/6 transition-all duration-200"
@@ -92,10 +71,7 @@ const CategoryRow = memo(function CategoryRow({ category, items, isFirst }: { ca
           عرض الكل
         </Link>
       </div>
-      {/* Dotted divider */}
       <div className="border-t-2 border-dashed border-[#0B43FD]/20 mb-4 sm:mb-6" />
-
-      {/* Products Grid */}
       <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-5">
         {visible.map((p, i) => (
           <ProductCard key={p._id} product={p} priority={isFirst && i === 0} />
@@ -123,7 +99,6 @@ export default function ProductGrid({
       const cat = p.category || "أخرى";
       (map[cat] ??= []).push(p);
     });
-    // Sort each category the same way as the category page (storage → color)
     const parseStorage = (s?: string) => {
       if (!s) return 0;
       const n = parseFloat(s);
@@ -147,7 +122,6 @@ export default function ProductGrid({
     return map;
   }, [products]);
 
-  // If no settings configured yet, show all. Otherwise filter & sort by settings.
   const orderedCategories = useMemo(() => {
     const allCats = Object.keys(grouped).filter((c) => c !== "أخرى");
     if (!homeConfig) return allCats;

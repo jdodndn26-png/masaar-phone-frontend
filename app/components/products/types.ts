@@ -1,5 +1,9 @@
 export interface StorageOption {
   storage: string;
+  ram?: string;
+  gpu?: string;
+  chip?: string;
+  size?: string;
   originalPrice: number;
   salePrice?: number;
 }

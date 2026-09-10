@@ -9,21 +9,32 @@ export default function AdminNavbar({ onMenuClick }: { onMenuClick: () => void }
   const [orderCount, setOrderCount] = useState(0);
 
   useEffect(() => {
+    let aborted = false;
+
     fetch("/api/admin/company", { credentials: "include" })
       .then((r) => r.json())
       .then((d) => {
-        if (d.logo) setLogo(d.logo.startsWith("http") ? d.logo : `http://localhost:5000${d.logo}`);
+        if (!aborted && d.logo)
+          setLogo(d.logo.startsWith("http") ? d.logo : `http://localhost:5000${d.logo}`);
       })
       .catch(() => {});
 
-    const loadOrders = () =>
-      fetch("/api/admin/orders", { credentials: "include" })
+    let currentCtrl = new AbortController();
+    const loadCount = () => {
+      currentCtrl.abort();
+      currentCtrl = new AbortController();
+      fetch("/api/admin/orders/count", { credentials: "include", signal: currentCtrl.signal })
         .then((r) => r.json())
-        .then((d) => setOrderCount(Array.isArray(d) ? d.length : 0))
+        .then((d) => { if (!aborted) setOrderCount(typeof d?.count === "number" ? d.count : 0); })
         .catch(() => {});
-    loadOrders();
-    const interval = setInterval(loadOrders, 15000);
-    return () => clearInterval(interval);
+    };
+    loadCount();
+    const interval = setInterval(loadCount, 30000);
+    return () => {
+      aborted = true;
+      currentCtrl.abort();
+      clearInterval(interval);
+    };
   }, []);
 
   async function handleLogout() {

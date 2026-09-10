@@ -1,17 +1,7 @@
 import Link from "next/link";
 import Image from "next/image";
 import { FaWhatsapp, FaPhone, FaEnvelope, FaMapMarkerAlt } from "react-icons/fa";
-
-const API = process.env.BACKEND_URL || process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000";
-
-async function getCompany() {
-  try {
-    const r = await fetch(`${API}/api/admin/company`, { next: { tags: ["company"] } });
-    return r.ok ? r.json() : {};
-  } catch {
-    return {};
-  }
-}
+import { getCachedCompany } from "../lib/products-cache";
 
 function ensureAbsolute(url: string) {
   if (!url) return "";
@@ -25,7 +15,7 @@ function toInlineUrl(url: string) {
 }
 
 export default async function Footer() {
-  const c = await getCompany();
+  const c = await getCachedCompany();
 
   const footerItems: { image: string; linkType: string; link: string; file: string }[] =
     (c.footerItems || []).filter((item: { image: string }) => item.image);

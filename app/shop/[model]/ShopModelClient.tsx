@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo, useEffect, useCallback } from "react";
+import { useState, useMemo, useEffect, useCallback, useRef } from "react";
 import Image from "next/image";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import ProductCard from "../../components/products/ProductCard";
@@ -22,9 +22,9 @@ interface Props {
 }
 
 export default function ShopModelClient({ products, modelName, hero = [] }: Props) {
-  // ── Hero slider state ─────────────────────────────────────────
   const [slideIdx, setSlideIdx] = useState(0);
   const slides = hero.length > 0 ? hero.filter((s) => !!s.image) : null;
+  const heroRef = useRef<HTMLDivElement>(null);
 
   const nextSlide = useCallback(() => {
     if (!slides) return;
@@ -33,8 +33,26 @@ export default function ShopModelClient({ products, modelName, hero = [] }: Prop
 
   useEffect(() => {
     if (!slides || slides.length <= 1) return;
-    const t = setInterval(nextSlide, 4000);
-    return () => clearInterval(t);
+    let intervalId: ReturnType<typeof setInterval> | null = null;
+
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          intervalId = setInterval(nextSlide, 4000);
+        } else {
+          if (intervalId) clearInterval(intervalId);
+        }
+      },
+      { threshold: 0.2 }
+    );
+
+    const el = heroRef.current;
+    if (el) observer.observe(el);
+
+    return () => {
+      observer.disconnect();
+      if (intervalId) clearInterval(intervalId);
+    };
   }, [slides, nextSlide]);
   // ── Filter state ──────────────────────────────────────────────
   const [sortBy, setSortBy] = useState<"default" | "price-asc" | "price-desc" | "discount">("price-asc");
@@ -62,7 +80,7 @@ export default function ShopModelClient({ products, modelName, hero = [] }: Prop
     <main dir="rtl" className="min-h-screen bg-[#f5f7ff]">
 
       {/* ── Hero Slider ──────────────────────────────────────── */}
-      <div className="relative w-full h-[300px] sm:h-[420px] lg:h-[500px] overflow-hidden">
+      <div ref={heroRef} className="relative w-full h-[300px] sm:h-[420px] lg:h-[500px] overflow-hidden">
 
         {/* Slides */}
         {slides ? (
@@ -78,6 +96,7 @@ export default function ShopModelClient({ products, modelName, hero = [] }: Prop
                 alt={slide.subtitle}
                 fill
                 priority={i === 0}
+                loading={i === 0 ? "eager" : "lazy"}
                 className="object-cover object-center scale-105"
                 sizes="100vw"
               />

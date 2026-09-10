@@ -26,20 +26,9 @@ export default function HeroSection({ banners }: { banners: Banner[] }) {
         style={{
           borderRadius: "20px",
           boxShadow: "0 8px 40px rgba(0,0,0,0.18), 0 2px 8px rgba(0,0,0,0.10)",
+          aspectRatio: "16/9",
         }}
       >
-        {/* الصورة الأولى تحدد ارتفاع الـ section */}
-        <Image
-          src={active[0].url}
-          alt="banner-size"
-          width={1600}
-          height={900}
-          className="w-full h-auto block invisible"
-          priority
-          aria-hidden
-        />
-
-        {/* كل الصور فوق بعض */}
         {active.map((b, i) => (
           <div
             key={b.url}
@@ -51,30 +40,29 @@ export default function HeroSection({ banners }: { banners: Banner[] }) {
               alt={`banner-${i + 1}`}
               fill
               priority={i === 0}
+              loading={i === 0 ? "eager" : "lazy"}
               className="object-contain"
-              quality={90}
+              quality={75}
             />
           </div>
         ))}
 
         {active.length > 1 && (
-          <>
-            <div className="absolute bottom-3 left-1/2 -translate-x-1/2 flex gap-1.5 z-10">
-              {active.map((_, i) => (
-                <button
-                  key={i}
-                  onClick={() => setCurrent(i)}
-                  className="transition-all duration-300"
-                  style={{
-                    width: i === current ? "24px" : "8px",
-                    height: "8px",
-                    borderRadius: "4px",
-                    background: i === current ? "#fff" : "rgba(255,255,255,0.45)",
-                  }}
-                />
-              ))}
-            </div>
-          </>
+          <div className="absolute bottom-3 left-1/2 -translate-x-1/2 flex gap-1.5 z-10">
+            {active.map((_, i) => (
+              <button
+                key={i}
+                onClick={() => setCurrent(i)}
+                className="transition-all duration-300"
+                style={{
+                  width: i === current ? "24px" : "8px",
+                  height: "8px",
+                  borderRadius: "4px",
+                  background: i === current ? "#fff" : "rgba(255,255,255,0.45)",
+                }}
+              />
+            ))}
+          </div>
         )}
       </section>
     </div>

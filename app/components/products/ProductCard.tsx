@@ -31,6 +31,8 @@ function ProductCard({ product, priority = false }: { product: Product; priority
   };
   const [activeStorageIdx, setActiveStorageIdx] = useState(() => getDefaultStorageIdx(product.variants?.[0]));
   const [added, setAdded] = useState(false);
+  const [storageExpanded, setStorageExpanded] = useState(false);
+  const VISIBLE_OPTS = 3;
 
   const activeVariant: ProductVariant | undefined = hasVariants ? product.variants![activeVariantIdx] : undefined;
   const allStorageOptions = (hasVariants ? activeVariant?.storageOptions : undefined) ?? product.variants?.[0]?.storageOptions ?? [];
@@ -39,7 +41,8 @@ function ProductCard({ product, priority = false }: { product: Product; priority
   const baseName = product.name.split("،")[0].trim();
   const selectedColorName = activeVariant?.color ?? product.color ?? "";
   const selectedStorageName = activeStorageOpt?.storage ?? product.storage ?? "";
-  const displayName = `${baseName}${selectedStorageName ? " – " + selectedStorageName : ""}${selectedColorName ? " | " + selectedColorName : ""}`;
+  const selectedRam = activeStorageOpt?.ram;
+  const displayName = `${baseName}${selectedStorageName ? " – " + selectedStorageName : ""}${selectedRam ? " / " + selectedRam : ""}${selectedColorName ? " | " + selectedColorName : ""}`;
 
   const originalPrice = activeStorageOpt?.originalPrice ?? product.originalPrice ?? product.price ?? 0;
   const salePrice = activeStorageOpt?.salePrice ?? product.salePrice;
@@ -52,34 +55,18 @@ function ProductCard({ product, priority = false }: { product: Product; priority
   const mainImage = allImages[0] ? resolveImg(allImages[0]) : "";
 
   const addItem = useCartStore((s) => s.addItem);
+  const router = useRouter();
 
   const handleAddToCart = useCallback((e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
     addItem({ ...product, name: displayName, color: activeVariant?.color ?? product.color, storage: activeStorageOpt?.storage ?? product.storage, originalPrice, salePrice, image: allImages[0], images: [allImages[0]] });
     setAdded(true);
-    setTimeout(() => { setAdded(false); window.scrollTo(0, 0); window.location.href = "/cart"; }, 800);
-  }, [addItem, product, activeVariant, activeStorageOpt, originalPrice, salePrice, allImages, displayName]);
-
-  const router = useRouter();
+    setTimeout(() => { setAdded(false); router.push("/cart"); }, 800);
+  }, [addItem, product, activeVariant, activeStorageOpt, originalPrice, salePrice, allImages, displayName, router]);
 
   const goToProduct = () => {
-    let url = `/product/${product._id}`;
-    const params = new URLSearchParams();
-    
-    if (activeVariant?.color) {
-      params.append('color', activeVariant.color);
-    }
-    if (activeStorageOpt?.storage) {
-      params.append('storage', activeStorageOpt.storage);
-    }
-    
-    const queryString = params.toString();
-    if (queryString) {
-      url += `?${queryString}`;
-    }
-    
-    router.push(url);
+    router.push(`/product/${product._id}`);
   };
 
   return (
@@ -102,6 +89,7 @@ function ProductCard({ product, priority = false }: { product: Product; priority
         )}
         {mainImage && (
           <Image src={mainImage} alt={product.name} fill priority={priority}
+            loading={priority ? "eager" : "lazy"}
             className="object-contain p-3"
             sizes="(max-width: 640px) 50vw, 25vw"
           />
@@ -131,15 +119,52 @@ function ProductCard({ product, priority = false }: { product: Product; priority
 
         {/* Storage */}
         {allStorageOptions.length > 1 && (
-          <div className="flex flex-wrap gap-1">
-            {allStorageOptions.map((opt, i) => (
-              <button key={`${activeVariantIdx}-${i}-${opt.storage}`}
-                onClick={(e) => { e.preventDefault(); e.stopPropagation(); setActiveStorageIdx(i); }}
-                className={`px-1.5 sm:px-2.5 py-0.5 sm:py-1 rounded-md sm:rounded-lg text-[9px] sm:text-[11px] font-bold border cursor-pointer transition-colors duration-150 ${activeStorageIdx === i ? "bg-[#0B43FD] text-white border-[#0B43FD]" : "bg-white text-[#0B43FD] border-[#0B43FD]/30"}`}
+          <div className="flex flex-col gap-1">
+            <div className="flex flex-wrap gap-1">
+              {(storageExpanded ? allStorageOptions : allStorageOptions.slice(0, VISIBLE_OPTS)).map((opt, i) => {
+                const isActive = activeStorageIdx === i;
+                return (
+                  <button key={`${activeVariantIdx}-${i}-${opt.storage}-${opt.chip ?? ""}`}
+                    onClick={(e) => { e.preventDefault(); e.stopPropagation(); setActiveStorageIdx(i); }}
+                    className={`flex flex-col items-center justify-center px-2 sm:px-3 py-1 sm:py-1.5 rounded-lg sm:rounded-xl border cursor-pointer transition-all duration-150 ${
+                      isActive
+                        ? "bg-[#0B43FD] text-white border-[#0B43FD] shadow-sm shadow-[#0B43FD]/20"
+                        : "bg-white text-[#0B43FD] border-[#0B43FD]/30 hover:border-[#0B43FD]/60"
+                    }`}
+                  >
+                    {opt.chip && (
+                      <span className={`text-[8px] sm:text-[9px] font-black leading-tight ${
+                        isActive ? "text-white" : "text-gray-800"
+                      }`}>{opt.chip}</span>
+                    )}
+                    <span className="text-[9px] sm:text-[11px] font-black leading-tight">{opt.storage}</span>
+                    {(opt.ram || opt.size) && (
+                      <span className={`text-[7px] sm:text-[8px] font-bold leading-tight ${
+                        isActive ? "text-white/70" : "text-gray-400"
+                      }`}>
+                        {opt.size ?? ""}{opt.size && opt.ram ? " • " : ""}{opt.ram ?? ""}
+                      </span>
+                    )}
+                  </button>
+                );
+              })}
+            </div>
+            {allStorageOptions.length > VISIBLE_OPTS && (
+              <button
+                onClick={(e) => { e.preventDefault(); e.stopPropagation(); setStorageExpanded(v => !v); }}
+                className="flex items-center justify-center gap-1 w-full py-1 rounded-lg border border-dashed border-[#0B43FD]/20 text-[#0B43FD]/50 hover:border-[#0B43FD]/50 hover:text-[#0B43FD] hover:bg-[#0B43FD]/5 transition-all duration-150 cursor-pointer"
               >
-                {opt.storage}
+                <span className="text-[9px] sm:text-[10px] font-bold">
+                  {storageExpanded ? "عرض أقل" : `${allStorageOptions.length - VISIBLE_OPTS} خيارات أخرى`}
+                </span>
+                <svg
+                  width="10" height="10" viewBox="0 0 10 10" fill="none"
+                  className={`transition-transform duration-200 ${storageExpanded ? "rotate-180" : ""}`}
+                >
+                  <path d="M2 3.5L5 6.5L8 3.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                </svg>
               </button>
-            ))}
+            )}
           </div>
         )}
 

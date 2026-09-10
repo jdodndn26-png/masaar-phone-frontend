@@ -28,19 +28,35 @@ export default function ProductInfo({ product, selectedColor, selectedStorage, o
   const [loading, setLoading] = useState(false);
   const [popup, setPopup] = useState(false);
 
-  const { brand, salePrice, originalPrice = 0, taxIncluded, installment, freeDelivery, inStock } = product;
+  const { brand, taxIncluded, installment, freeDelivery, inStock } = product;
   const baseName = product.name.split("،")[0].trim();
-  const displayName = `${baseName}${selectedStorage ? " – " + selectedStorage : ""}${selectedColor ? " | " + selectedColor : ""}`;
+
+  const activeVariant = product.variants?.find((v) => v.color === selectedColor);
+  const storageOpts = activeVariant?.storageOptions ?? product.variants?.[0]?.storageOptions ?? [];
+  const activeStorageOpt = storageOpts.find((o) => `${o.storage}|${o.ram ?? ""}|${o.size ?? ""}` === selectedStorage) ?? storageOpts.find((o) => o.storage === selectedStorage) ?? storageOpts[0];
+
+  const originalPrice = activeStorageOpt?.originalPrice ?? product.originalPrice ?? 0;
+  const salePrice = activeStorageOpt?.salePrice ?? product.salePrice;
   const hasDiscount = salePrice != null && salePrice !== originalPrice;
   const savings = hasDiscount ? originalPrice - (salePrice ?? 0) : 0;
   const discountPct = hasDiscount ? Math.round((savings / originalPrice) * 100) : 0;
-  const baseStorageOpts = product.variants?.[0]?.storageOptions ?? [];
-  const storageOpts = baseStorageOpts;
+
+  const selectedRam = activeStorageOpt?.ram;
+  const displayName = `${baseName}${selectedStorage ? " – " + selectedStorage : ""}${selectedRam ? " / " + selectedRam : ""}${selectedColor ? " | " + selectedColor : ""}`;
 
   const handleAdd = () => {
     setLoading(true);
     setTimeout(() => {
-      addItem({ ...product, name: displayName });
+      addItem({
+        ...product,
+        name: displayName,
+        color: selectedColor || product.color,
+        storage: selectedStorage || product.storage,
+        originalPrice,
+        salePrice,
+        image: activeVariant?.images?.[0] ?? product.image,
+        images: activeVariant?.images?.length ? activeVariant.images : product.images,
+      });
       setLoading(false);
       setAdded(true);
       setPopup(true);
@@ -125,23 +141,38 @@ export default function ProductInfo({ product, selectedColor, selectedStorage, o
 
           {/* Storage */}
           {storageOpts.length > 1 && (
-            <div className="flex items-center gap-2 flex-wrap">
-              <span className="text-[11px] font-bold text-gray-400 shrink-0">السعة</span>
-              <div className="flex gap-1.5 flex-wrap">
-                {storageOpts.map((opt) => (
-                  <motion.button
-                    key={opt.storage}
-                    whileTap={{ scale: 0.94 }}
-                    onClick={() => onStorageChange(opt.storage)}
-                    className={`px-2.5 py-1 rounded-lg text-[11px] font-black border cursor-pointer transition-all duration-150 ${
-                      selectedStorage === opt.storage
-                        ? "bg-[#0B43FD] text-white border-[#0B43FD] shadow-sm shadow-[#0B43FD]/20"
-                        : "bg-gray-50 text-gray-500 border-gray-200 hover:border-gray-300"
-                    }`}
-                  >
-                    {opt.storage}
-                  </motion.button>
-                ))}
+            <div className="flex flex-col gap-2">
+              <span className="text-[11px] font-bold text-gray-400">السعة والذاكرة</span>
+              <div className="flex gap-2 flex-wrap">
+                {storageOpts.map((opt) => {
+                  const isActive = selectedStorage === `${opt.storage}|${opt.ram ?? ""}|${opt.size ?? ""}` || (selectedStorage === opt.storage && !opt.ram && !opt.size);
+                  return (
+                    <motion.button
+                      key={`${opt.storage}-${opt.ram ?? ""}-${opt.chip ?? ""}-${opt.size ?? ""}`}
+                      whileTap={{ scale: 0.94 }}
+                      onClick={() => onStorageChange(`${opt.storage}|${opt.ram ?? ""}|${opt.size ?? ""}`)}
+                      className={`flex flex-col items-center px-3 py-2 rounded-xl text-[11px] font-black border cursor-pointer transition-all duration-150 ${
+                        isActive
+                          ? "bg-[#0B43FD] text-white border-[#0B43FD] shadow-sm shadow-[#0B43FD]/20"
+                          : "bg-gray-50 text-gray-600 border-gray-200 hover:border-[#0B43FD]/40"
+                      }`}
+                    >
+                      {opt.chip && (
+                        <span className={`text-[10px] font-black leading-tight ${
+                          isActive ? "text-white" : "text-gray-800"
+                        }`}>{opt.chip}</span>
+                      )}
+                      <span className={opt.chip ? "text-[9px] font-bold" : ""}>{opt.storage}</span>
+                      {(opt.ram || opt.size) && (
+                        <span className={`text-[9px] font-bold mt-0.5 ${
+                          isActive ? "text-white/70" : "text-gray-400"
+                        }`}>
+                          {opt.size ? opt.size : ""}{opt.size && opt.ram ? " • " : ""}{opt.ram ?? ""}
+                        </span>
+                      )}
+                    </motion.button>
+                  );
+                })}
               </div>
             </div>
           )}
@@ -151,7 +182,7 @@ export default function ProductInfo({ product, selectedColor, selectedStorage, o
           {/* Price */}
           <AnimatePresence mode="wait">
             <motion.div
-              key={`${salePrice ?? originalPrice}`}
+              key={`${selectedStorage}-${selectedColor}`}
               initial={{ opacity: 0, y: 5 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0 }}
