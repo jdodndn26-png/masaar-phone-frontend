@@ -1,4 +1,4 @@
-const ALLOWED_HOSTS = ["localhost", "backend-masar-production.up.railway.app"];
+const ALLOWED_HOSTS = ["localhost", "masaar-phone-backend.vercel.app"];
 const ALLOWED_PREFIXES = [
   "/api/admin",
   "/api/products",
