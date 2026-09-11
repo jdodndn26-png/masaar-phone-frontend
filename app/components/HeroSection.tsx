@@ -26,7 +26,8 @@ export default function HeroSection({ banners }: { banners: Banner[] }) {
         style={{
           borderRadius: "20px",
           boxShadow: "0 8px 40px rgba(0,0,0,0.18), 0 2px 8px rgba(0,0,0,0.10)",
-          aspectRatio: "16/9",
+          paddingBottom: "56.25%",
+          height: 0,
         }}
       >
         {active.map((b, i) => (
