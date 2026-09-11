@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState, useRef } from "react";
+import { useRouter } from "next/navigation";
 import Image from "next/image";
 
 const RESERVATION_DATE = new Date(
@@ -13,21 +14,29 @@ const DEFAULT_SLIDES = [
   "https://res.cloudinary.com/bzwltpqf/image/upload/v1789126695/3b1575e2-faab-4566-b6f3-5487b39bb64c.webp",
 ];
 
-function useCountdown(target: Date) {
+function useCountdown(target: Date, onExpire: () => void) {
   const calc = () => {
     const diff = target.getTime() - Date.now();
-    if (diff <= 0) return { days: 0, hours: 0, minutes: 0, seconds: 0 };
+    if (diff <= 0) return { days: 0, hours: 0, minutes: 0, seconds: 0, expired: true };
     return {
       days: Math.floor(diff / 86400000),
       hours: Math.floor((diff % 86400000) / 3600000),
       minutes: Math.floor((diff % 3600000) / 60000),
       seconds: Math.floor((diff % 60000) / 1000),
+      expired: false,
     };
   };
-  const [time, setTime] = useState({ days: 0, hours: 0, minutes: 0, seconds: 0 });
+  const [time, setTime] = useState(calc);
+  const calledRef = useRef(false);
   useEffect(() => {
-    setTime(calc());
-    const id = setInterval(() => setTime(calc()), 1000);
+    const id = setInterval(() => {
+      const next = calc();
+      setTime(next);
+      if (next.expired && !calledRef.current) {
+        calledRef.current = true;
+        onExpire();
+      }
+    }, 1000);
     return () => clearInterval(id);
   }, []);
   return time;
@@ -67,7 +76,8 @@ function TimeBox({ value, label }: { value: number; label: string }) {
 
 export default function IPhone18ComingSoon({ modelName, slides }: { modelName: string; slides?: string[] }) {
   const SLIDES = slides?.length ? slides : DEFAULT_SLIDES;
-  const countdown = useCountdown(RESERVATION_DATE);
+  const router = useRouter();
+  const countdown = useCountdown(RESERVATION_DATE, () => router.refresh());
   const [current, setCurrent] = useState(0);
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
 

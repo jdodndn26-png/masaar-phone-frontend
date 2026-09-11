@@ -10,14 +10,30 @@ const IPHONE18_RESERVATION_DATE = new Date(
   process.env.NEXT_PUBLIC_IPHONE18_RESERVATION_DATE ?? "2026-09-12T23:00:00+03:00"
 );
 
-const IPHONE18_MODELS: Record<string, { name: string; keywords: string[]; slides?: string[]; hero?: HeroSlide[] }> = {
+const IPHONE18_MODELS: Record<string, { name: string; keywords: string[]; slides?: string[]; hero: HeroSlide[] }> = {
   "18-pro-max": {
     name: "آيفون 18 برو ماكس",
     keywords: ["18 برو ماكس", "18 pro max", "18promax"],
+    hero: [
+      { image: "https://res.cloudinary.com/bzwltpqf/image/upload/v1789126696/deec23e7-4e69-4b8f-8b56-8900ec23bba0.webp", title: "تصميم بريميوم من ألومنيوم", subtitle: "تصميم بقطعة واحدة من الألومنيوم المشكّل بالحرارة لقدرات احترافية استثنائية.", highlight: "احترافية استثنائية" },
+      { image: "https://res.cloudinary.com/bzwltpqf/image/upload/v1789126696/84ca1c8c-c904-468c-a590-6f2baa31877d.webp", title: "أداء نار مع شريحة A19 Pro", subtitle: "تبريد بالبخار، سرعة فائقة، وبطارية تدوم أكثر", highlight: "سرعة فائقة" },
+      { image: "https://res.cloudinary.com/bzwltpqf/image/upload/v1789126695/6e161ae0-867a-424a-b7ed-ffca26b5a76f.webp", title: "كاميرا احترافية.. تفاصيل مذهلة", subtitle: "ثلاث كاميرات 48MP Fusion مع أطول زووم في تاريخ iPhone", highlight: "أطول زووم" },
+      { image: "https://res.cloudinary.com/bzwltpqf/image/upload/v1789126696/ea9233d4-4fb9-419f-a9c8-7e76a13d16a5.webp", title: "كاميرا Center Stage.. سيلفي أذكى", subtitle: "تأطير مرن، صور جماعية أفضل، وتجربة سيلفي أكثر ذكاءً", highlight: "أكثر ذكاءً" },
+      { image: "https://res.cloudinary.com/bzwltpqf/image/upload/v1789126697/1c43f7a3-d804-4f24-b2e4-34d298bd0d7f.webp", title: "iOS 26.. ستايل جديد وتجربة أجمل", subtitle: "تصميم جديد، مزايا أكثر، وتجربة استخدام أكثر سلاسة", highlight: "أكثر سلاسة" },
+      { image: "https://res.cloudinary.com/bzwltpqf/image/upload/v1789126713/62c2df83-0f67-463c-bef1-745faa4550b6.webp", title: "Apple Intelligence.. ذكاء يساعدك أكثر", subtitle: "إنشاء الصور، الترجمة المباشرة، ومزايا ذكية تجعل يومك أسهل", highlight: "يومك أسهل" },
+    ],
   },
   "18": {
     name: "آيفون 18 برو",
     keywords: ["18 برو", "18 pro"],
+    hero: [
+      { image: "/iphone-17-promax/i-hero1.webp", title: "تصميم بريميوم من ألومنيوم", subtitle: "تصميم بقطعة واحدة من الألومنيوم المشكّل بالحرارة لقدرات احترافية استثنائية.", highlight: "احترافية استثنائية" },
+      { image: "/iphone-17-promax/i-hero2.webp", title: "أداء نار مع شريحة A19 Pro", subtitle: "تبريد بالبخار، سرعة فائقة، وبطارية تدوم أكثر", highlight: "سرعة فائقة" },
+      { image: "/iphone-17-promax/i-hero3.webp", title: "كاميرا احترافية.. تفاصيل مذهلة", subtitle: "ثلاث كاميرات 48MP Fusion مع أطول زووم في تاريخ iPhone", highlight: "أطول زووم" },
+      { image: "/iphone-17-promax/i-hero4.webp", title: "كاميرا Center Stage.. سيلفي أذكى", subtitle: "تأطير مرن، صور جماعية أفضل، وتجربة سيلفي أكثر ذكاءً", highlight: "أكثر ذكاءً" },
+      { image: "/iphone-17-promax/i-hero5.webp", title: "iOS 26.. ستايل جديد وتجربة أجمل", subtitle: "تصميم جديد، مزايا أكثر، وتجربة استخدام أكثر سلاسة", highlight: "أكثر سلاسة" },
+      { image: "/iphone-17-promax/i-hero6.webp", title: "Apple Intelligence.. ذكاء يساعدك أكثر", subtitle: "إنشاء الصور، الترجمة المباشرة، ومزايا ذكية تجعل يومك أسهل", highlight: "يومك أسهل" },
+    ],
   },
   "18-duo": {
     name: "آيفون 18 دو",
@@ -25,6 +41,10 @@ const IPHONE18_MODELS: Record<string, { name: string; keywords: string[]; slides
     slides: [
       "https://res.cloudinary.com/bzwltpqf/image/upload/v1789095830/background-removed.webp",
       "https://res.cloudinary.com/bzwltpqf/image/upload/v1789095830/c5a8d90b-ec81-4680-823f-1b460f0dc8ea.webp",
+    ],
+    hero: [
+      { image: "https://res.cloudinary.com/bzwltpqf/image/upload/v1789095830/background-removed.webp", title: "تصميم عصري مختلف", subtitle: "آيفون 18 دو، تجربة مزدوجة بتصميم استثنائي.", highlight: "تجربة مزدوجة" },
+      { image: "https://res.cloudinary.com/bzwltpqf/image/upload/v1789095830/c5a8d90b-ec81-4680-823f-1b460f0dc8ea.webp", title: "ألوان تخطف الأنظار", subtitle: "اختر لونك من تشكيلة حصرية مصممة لتميّزك.", highlight: "تشكيلة حصرية" },
     ],
   },
 };

@@ -79,10 +79,15 @@ export default function MobileMenu({ items, isOpen, onClose }: MobileMenuProps) 
                         <Link
                           key={`${child.href}-${ci}`}
                           href={child.href}
-                          className="block px-8 py-2.5 text-sm text-gray-600 hover:text-[#0B43FD] hover:bg-[#0B43FD]/8 transition-colors"
+                          className="flex items-center justify-between px-8 py-2.5 text-sm text-gray-600 hover:text-[#0B43FD] hover:bg-[#0B43FD]/8 transition-colors"
                           onClick={onClose}
                         >
                           {child.label}
+                          {child.comingSoon && (
+                            <span className="text-[10px] bg-orange-100 text-orange-600 font-semibold px-1.5 py-0.5 rounded-full shrink-0">
+                              قريباً
+                            </span>
+                          )}
                         </Link>
                       ))}
                     </div>
@@ -92,10 +97,15 @@ export default function MobileMenu({ items, isOpen, onClose }: MobileMenuProps) 
                     <Link
                       key={`${child.href}-${index}`}
                       href={child.href}
-                      className="block px-8 py-2.5 text-sm text-gray-600 hover:text-[#0B43FD] hover:bg-[#0B43FD]/8 transition-colors"
+                      className="flex items-center justify-between px-8 py-2.5 text-sm text-gray-600 hover:text-[#0B43FD] hover:bg-[#0B43FD]/8 transition-colors"
                       onClick={onClose}
                     >
                       {child.label}
+                      {child.comingSoon && (
+                        <span className="text-[10px] bg-orange-100 text-orange-600 font-semibold px-1.5 py-0.5 rounded-full shrink-0">
+                          قريباً
+                        </span>
+                      )}
                     </Link>
                   ))}
                 </div>

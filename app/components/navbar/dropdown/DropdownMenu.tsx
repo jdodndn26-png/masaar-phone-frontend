@@ -1,11 +1,28 @@
 "use client";
 
 import Link from "next/link";
-import { NavGroup } from "../data";
+import { NavChild, NavGroup } from "../data";
 
 interface DropdownMenuProps {
-  items?: { label: string; href: string }[];
+  items?: NavChild[];
   groups?: NavGroup[];
+}
+
+function NavLink({ item }: { item: NavChild }) {
+  return (
+    <Link
+      href={item.href}
+      className={item.comingSoon ? "flex items-center justify-between px-4 py-2 text-sm text-gray-700 hover:bg-[#0B43FD]/8 hover:text-[#0B43FD] transition-colors text-right" : "block px-4 py-2 text-sm text-gray-700 hover:bg-[#0B43FD]/8 hover:text-[#0B43FD] transition-colors text-right"}
+      suppressHydrationWarning
+    >
+      {item.label}
+      {item.comingSoon && (
+        <span className="text-[10px] bg-orange-100 text-orange-600 font-semibold px-1.5 py-0.5 rounded-full shrink-0 mr-1" suppressHydrationWarning>
+          قريباً
+        </span>
+      )}
+    </Link>
+  );
 }
 
 export default function DropdownMenu({ items, groups }: DropdownMenuProps) {
@@ -17,24 +34,12 @@ export default function DropdownMenu({ items, groups }: DropdownMenuProps) {
             {group.groupLabel}
           </div>
           {group.items.map((item, ci) => (
-            <Link
-              key={`${item.href}-${ci}`}
-              href={item.href}
-              className="block px-4 py-2 text-sm text-gray-700 hover:bg-[#0B43FD]/8 hover:text-[#0B43FD] transition-colors text-right"
-            >
-              {item.label}
-            </Link>
+            <NavLink key={`${item.href}-${ci}`} item={item} />
           ))}
         </div>
       ))}
       {items?.map((item, index) => (
-        <Link
-          key={`${item.href}-${index}`}
-          href={item.href}
-          className="block px-4 py-2 text-sm text-gray-700 hover:bg-[#0B43FD]/8 hover:text-[#0B43FD] transition-colors text-right"
-        >
-          {item.label}
-        </Link>
+        <NavLink key={`${item.href}-${index}`} item={item} />
       ))}
     </div>
   );
