@@ -16,12 +16,11 @@ export const getCachedProducts = unstable_cache(
   { revalidate: 300, tags: ["products"] }
 );
 
-// cache key includes id — Next.js uses function args as part of key automatically
 export const getCachedProduct = unstable_cache(
   async (id: string) => {
     try {
       const res = await fetch(`${BACKEND}/api/products/${id}`, {
-        next: { tags: ["products"] },
+        next: { tags: [`product-${id}`, "products"] },
       });
       return res.ok ? res.json() : null;
     } catch {

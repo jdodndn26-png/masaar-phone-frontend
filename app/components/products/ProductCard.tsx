@@ -2,6 +2,7 @@
 
 import { memo, useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import Image from "next/image";
 import { ShoppingCart, CheckCircle2 } from "lucide-react";
 import { Icon } from "@iconify/react";
@@ -65,16 +66,12 @@ function ProductCard({ product, priority = false }: { product: Product; priority
     setTimeout(() => { setAdded(false); router.push("/cart"); }, 800);
   }, [addItem, product, activeVariant, activeStorageOpt, originalPrice, salePrice, allImages, displayName, router]);
 
-  const goToProduct = () => {
-    router.push(`/product/${product._id}`);
-  };
-
   return (
     <div dir="rtl"
       className="flex flex-col rounded-2xl overflow-hidden bg-white border border-[#e8edf5] hover:border-[#0B43FD]/30 hover:shadow-[0_8px_28px_rgba(11,67,253,0.10)] transition-all duration-200"
     >
       {/* ── Image ── */}
-      <div onClick={goToProduct} className="relative w-full aspect-square bg-white overflow-hidden cursor-pointer">
+      <Link href={`/product/${product._id}`} className="relative w-full aspect-square bg-white overflow-hidden cursor-pointer block">
         {discountPct > 0 && (
           <span className="absolute top-2 right-2 z-10 bg-[#0B43FD] text-white text-[10px] font-black px-2 py-0.5 rounded-full">
             -{discountPct}%
@@ -94,15 +91,15 @@ function ProductCard({ product, priority = false }: { product: Product; priority
             sizes="(max-width: 640px) 50vw, 25vw"
           />
         )}
-      </div>
+      </Link>
 
       {/* ── Body ── */}
       <div className="flex flex-col gap-1 sm:gap-1 p-2 sm:p-4 flex-1">
 
         {/* Name */}
-        <p onClick={goToProduct} className="text-[11px] sm:text-[13px] font-bold text-gray-900 leading-snug line-clamp-2 min-h-[28px] sm:min-h-[34px] cursor-pointer">
+        <Link href={`/product/${product._id}`} className="text-[11px] sm:text-[13px] font-bold text-gray-900 leading-snug line-clamp-2 min-h-[28px] sm:min-h-[34px] cursor-pointer">
           {displayName}
-        </p>
+        </Link>
 
         {/* Colors */}
         {hasVariants && product.variants!.length > 1 && (

@@ -1,14 +1,26 @@
 import type { Metadata } from "next";
 import Script from "next/script";
+import { Almarai } from "next/font/google";
 import "./globals.css";
 import ClientLayout from "./components/ClientLayout";
 import Footer from "./components/Footer";
 import { getCachedCompany } from "./lib/products-cache";
 
+const almarai = Almarai({
+  subsets: ["arabic"],
+  weight: ["300", "400", "700", "800"],
+  display: "swap",
+  variable: "--font-almarai",
+});
+
 const SITE_URL = "https://masarphone.com";
 
+async function getCompanyData() {
+  return getCachedCompany();
+}
+
 export async function generateMetadata(): Promise<Metadata> {
-  const c = await getCachedCompany();
+  const c = await getCompanyData();
 
   const siteName = c.nameAr || "مسار الهاتف المعتمد";
   const description = c.details || "مسار الهاتف المعتمد — وجهتك الأولى لأحدث الهواتف الذكية بأقساط ميسرة وضمان معتمد في المملكة العربية السعودية. أفضل الأسعار على الجوالات، اللابتوبات، الأجهزة اللوحية والإكسسوارات.";
@@ -89,7 +101,7 @@ export async function generateMetadata(): Promise<Metadata> {
 export default async function RootLayout({
   children,
 }: Readonly<{ children: React.ReactNode }>) {
-  const c = await getCachedCompany();
+  const c = await getCompanyData();
   const API_BASE = process.env.BACKEND_URL || "http://localhost:5000";
   const logo = c.logo
     ? (c.logo.startsWith("http") ? c.logo : `${API_BASE}${c.logo}`)
@@ -97,11 +109,8 @@ export default async function RootLayout({
   const whatsapp: string = c.whatsapp || "";
 
   return (
-    <html lang="ar" dir="rtl">
+    <html lang="ar" dir="rtl" className={almarai.variable}>
       <head>
-        <link rel="preconnect" href="https://fonts.googleapis.com" />
-        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
-        <link href="https://fonts.googleapis.com/css2?family=Almarai:wght@300;400;700;800&display=swap" rel="stylesheet" />
         <meta name="apple-mobile-web-app-title" content="مسار الهاتف المعتمد" />
         <Script
           src="https://www.googletagmanager.com/gtag/js?id=AW-18394753580"
@@ -114,7 +123,7 @@ export default async function RootLayout({
           gtag('config', 'AW-18394753580');`}
         </Script>
       </head>
-      <body className="antialiased" style={{ fontFamily: '"Almarai", sans-serif' }} suppressHydrationWarning>
+      <body className="antialiased" style={{ fontFamily: 'var(--font-almarai), "Almarai", sans-serif' }} suppressHydrationWarning>
         <ClientLayout footer={<Footer />} whatsapp={whatsapp} logo={logo}>{children}</ClientLayout>
       </body>
     </html>
