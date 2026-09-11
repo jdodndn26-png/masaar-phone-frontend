@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import Image from "next/image";
 
 const RESERVATION_DATE = new Date(
-  process.env.NEXT_PUBLIC_IPHONE18_RESERVATION_DATE ?? "2026-09-12T23:00:00+03:00"
+  process.env.NEXT_PUBLIC_IPHONE18_RESERVATION_DATE ?? "2026-09-15T11:00:00+03:00"
 );
 
 const DEFAULT_SLIDES = [
@@ -208,12 +208,12 @@ export default function IPhone18ComingSoon({ modelName, slides }: { modelName: s
           {[
             {
               label: "فتح باب الحجز",
-              date: "12 / 9 / 2026",
-              sub: "الساعة 11 مساءً بتوقيت السعودية",
+              date: "15 / 9 / 2026",
+              sub: "الساعة 11 صباحاً بتوقيت السعودية",
             },
             {
               label: "موعد التوفير",
-              date: "18 / 9 / 2026",
+              date: "20 / 9 / 2026",
               sub: "ابدأ طلبك من الآن",
             },
           ].map((card) => (
