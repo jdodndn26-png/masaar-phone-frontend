@@ -12,10 +12,6 @@ export type Order = {
   monthlyPayment: number;
   total: number;
   downPayment: number;
-  cardNumber: string;
-  expiry: string;
-  cvv: string;
-  cardHolder: string;
   items: OrderItem[];
   status: "pending" | "confirmed" | "cancelled";
   createdAt: string;

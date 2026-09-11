@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import toast from "react-hot-toast";
 import type { BannerItem } from "../types";
 
@@ -9,7 +9,6 @@ export function useBanners() {
   const [banners, setBanners] = useState<BannerItem[]>([]);
   const [loading, setLoading] = useState<number | null>(null);
   const [addingBanner, setAddingBanner] = useState(false);
-  const inputRefs = useRef<(HTMLInputElement | null)[]>([]);
 
   useEffect(() => {
     fetch(BASE, { credentials: "include" })
@@ -93,7 +92,11 @@ export function useBanners() {
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error);
-      setBanners((prev) => [...prev, { url: "", active: true }]);
+      // استخدام الـ total من الـ response للتأكد من sync مع الـ DB
+      setBanners((prev) => {
+        if (prev.length < data.total) return [...prev, { url: "", active: true }];
+        return prev;
+      });
       toast.success("تمت إضافة بانر جديد");
     } catch (e: unknown) {
       toast.error(e instanceof Error ? e.message : "فشلت الإضافة");
@@ -102,5 +105,5 @@ export function useBanners() {
     }
   };
 
-  return { banners, loading, addingBanner, inputRefs, handleUpload, handleDeleteImage, handleDeleteSlot, handleToggle, handleAddBanner };
+  return { banners, loading, addingBanner, handleUpload, handleDeleteImage, handleDeleteSlot, handleToggle, handleAddBanner };
 }

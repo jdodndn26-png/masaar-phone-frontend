@@ -10,9 +10,55 @@ export interface ShopProduct {
   subtitle: string;
   colors: ColorVariant[];
   storage: string[];
+  imagePadding?: string;
+  imageScale?: string;
+  comingSoon?: boolean;
 }
 
 export const SHOP_PRODUCTS: ShopProduct[] = [
+  {
+    id: "18-pro-max",
+    name: "آيفون 18 برو ماكس",
+    subtitle: "iPhone 18 Pro Max",
+    colors: [
+      { name: "Burgundy", value: "#800020", image: "https://res.cloudinary.com/bzwltpqf/image/upload/v1789095298/34ab662e-de1b-4359-9d99-43e2ba54678f_1.webp" },
+      { name: "Glacier", value: "#DCE6F0", image: "https://res.cloudinary.com/bzwltpqf/image/upload/v1789095297/96bef8db-6a7f-4361-b75b-330d54685d37_1.webp" },
+      { name: "Silver", value: "#F5F5F5", image: "https://res.cloudinary.com/bzwltpqf/image/upload/v1789095399/11984507-b78d-47a8-b943-640b6cfe5bdf_1.webp" },
+      { name: "Black", value: "#1C1C1E", image: "https://res.cloudinary.com/bzwltpqf/image/upload/v1789095298/9be64aca-f6ba-41a9-9cd9-ae7fc833ee72_1.webp" },
+    ],
+    storage: ["256GB", "512GB", "1TB", "2TB"],
+    imagePadding: "p-1",
+    imageScale: "scale-[1.6]",
+    comingSoon: true,
+  },
+  {
+    id: "18",
+    name: "آيفون 18 برو",
+    subtitle: "iPhone 18",
+    colors: [
+            { name: "Glacier", value: "#DCE6F0", image: "https://res.cloudinary.com/bzwltpqf/image/upload/v1789095297/96bef8db-6a7f-4361-b75b-330d54685d37_1.webp" },
+
+      { name: "Silver", value: "#F5F5F5", image: "https://res.cloudinary.com/bzwltpqf/image/upload/v1789095399/11984507-b78d-47a8-b943-640b6cfe5bdf_1.webp" },
+      { name: "Burgundy", value: "#800020", image: "https://res.cloudinary.com/bzwltpqf/image/upload/v1789095298/34ab662e-de1b-4359-9d99-43e2ba54678f_1.webp" },
+      { name: "Black", value: "#1C1C1E", image: "https://res.cloudinary.com/bzwltpqf/image/upload/v1789095298/9be64aca-f6ba-41a9-9cd9-ae7fc833ee72_1.webp" },
+    ],
+    storage: ["256GB", "512GB", "1TB", "2TB"],
+    imagePadding: "p-1",
+    imageScale: "scale-[1.6]",
+    comingSoon: true,
+  },
+  {
+    id: "18-duo",
+    name: "آيفون 18 دو",
+    subtitle: "iPhone 18 Duo",
+    colors: [
+      { name: "أبيض نجمي", value: "#F8F8F5", image: "https://res.cloudinary.com/bzwltpqf/image/upload/v1789095830/c5a8d90b-ec81-4680-823f-1b460f0dc8ea.webp" },
+      { name: "سماء ليلية", value: "#1C2430", image: "https://res.cloudinary.com/bzwltpqf/image/upload/v1789095830/background-removed.webp" },
+    ],
+    storage: ["256GB", "512GB", "1TB", "2TB"],
+    imagePadding: "p-1",
+    comingSoon: true,
+  },
   {
     id: "17-pro-max",
     name: "آيفون 17 برو ماكس",

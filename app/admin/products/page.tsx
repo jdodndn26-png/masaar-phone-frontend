@@ -33,20 +33,19 @@ export default function ProductsPage() {
   const [search, setSearch] = useState("");
   const [confirmDelete, setConfirmDelete] = useState<{ id: string; name: string } | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
+  const [loading, setLoading] = useState(true);
   const PAGE_SIZE = 10;
 
-  async function fetchProducts() {
-    const res = await fetch("/api/admin/products", { credentials: "include" });
-    if (res.ok) setProducts(await res.json());
-  }
-
   useEffect(() => {
-    fetch("/api/admin/products", { credentials: "include" })
-      .then((res) => res.ok ? res.json() : null)
-      .then((data) => { if (data) setProducts(data); });
-    fetch("/api/admin/sub-categories", { credentials: "include" })
-      .then((res) => res.ok ? res.json() : [])
-      .then((data: SubCat[]) => setSubCats(data));
+    Promise.all([
+      fetch("/api/admin/products", { credentials: "include" }).then((r) => r.ok ? r.json() : []),
+      fetch("/api/admin/sub-categories", { credentials: "include" }).then((r) => r.ok ? r.json() : []),
+    ])
+      .then(([prods, cats]) => {
+        setProducts(prods);
+        setSubCats(cats);
+      })
+      .finally(() => setLoading(false));
   }, []);
 
   async function confirmDeleteAction() {
@@ -58,7 +57,7 @@ export default function ProductsPage() {
     const data = text ? JSON.parse(text) : {};
     if (!res.ok) return toast.error(data.message || "فشل الحذف");
     toast.success(`تم حذف "${name}" بنجاح ✅`);
-    fetchProducts();
+    setProducts((prev) => prev.filter((p) => p._id !== id));
   }
 
   const filtered = products.filter((p) => {
@@ -131,37 +130,46 @@ export default function ProductsPage() {
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-100">
-              {paginated.map((p, i) => (
-                <tr key={p._id} className="hover:bg-gray-50 text-base">
-                  <td className="px-5 py-3 text-gray-400 font-medium">{(currentPage - 1) * PAGE_SIZE + i + 1}</td>
-                  <td className="px-5 py-3 font-medium text-gray-800">{p.name}</td>
-                  <td className="px-5 py-3 text-gray-600">{p.category || "—"}</td>
-                  <td className="px-5 py-3 text-gray-700">
-                    {p.salePrice ? (
-                      <span>
-                        <span className="text-green-600 font-semibold">{p.salePrice} ر.س</span>
-                        <span className="text-gray-400 line-through text-xs mr-1">{p.originalPrice}</span>
-                      </span>
-                    ) : (
-                      <span>{p.originalPrice} ر.س</span>
-                    )}
-                  </td>
-                  <td className="px-5 py-3">
-                    <div className="flex items-center gap-3">
-                      <button onClick={() => router.push(`/admin/products/${p._id}/edit`)} className="text-blue-500 hover:text-blue-700" title="تعديل">
-                        <EditIcon />
-                      </button>
-                      <button onClick={() => setConfirmDelete({ id: p._id, name: p.name })} className="text-red-500 hover:text-red-700" title="حذف">
-                        <TrashIcon />
-                      </button>
+              {loading ? (
+                <tr>
+                  <td colSpan={5} className="px-4 py-10 text-center">
+                    <div className="flex justify-center">
+                      <div className="w-7 h-7 border-[3px] border-blue-500 border-t-transparent rounded-full animate-spin" />
                     </div>
                   </td>
                 </tr>
-              ))}
-              {paginated.length === 0 && (
+              ) : paginated.length === 0 ? (
                 <tr>
                   <td colSpan={5} className="px-4 py-8 text-center text-gray-400">لا توجد منتجات</td>
                 </tr>
+              ) : (
+                paginated.map((p, i) => (
+                  <tr key={p._id} className="hover:bg-gray-50 text-base">
+                    <td className="px-5 py-3 text-gray-400 font-medium">{(currentPage - 1) * PAGE_SIZE + i + 1}</td>
+                    <td className="px-5 py-3 font-medium text-gray-800">{p.name}</td>
+                    <td className="px-5 py-3 text-gray-600">{p.category || "—"}</td>
+                    <td className="px-5 py-3 text-gray-700">
+                      {p.salePrice ? (
+                        <span>
+                          <span className="text-green-600 font-semibold">{p.salePrice} ر.س</span>
+                          <span className="text-gray-400 line-through text-xs mr-1">{p.originalPrice}</span>
+                        </span>
+                      ) : (
+                        <span>{p.originalPrice} ر.س</span>
+                      )}
+                    </td>
+                    <td className="px-5 py-3">
+                      <div className="flex items-center gap-3">
+                        <button onClick={() => router.push(`/admin/products/${p._id}/edit`)} className="text-blue-500 hover:text-blue-700" title="تعديل">
+                          <EditIcon />
+                        </button>
+                        <button onClick={() => setConfirmDelete({ id: p._id, name: p.name })} className="text-red-500 hover:text-red-700" title="حذف">
+                          <TrashIcon />
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                ))
               )}
             </tbody>
           </table>
@@ -216,7 +224,6 @@ export default function ProductsPage() {
         </div>
       )}
 
-      {/* Confirm Delete */}
       {confirmDelete && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 px-4" dir="rtl">
           <div className="bg-white rounded-xl shadow-xl p-6 w-full max-w-sm text-center">

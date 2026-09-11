@@ -1,7 +1,33 @@
 import { notFound } from "next/navigation";
 import { getCachedProducts } from "../../lib/products-cache";
 import ShopModelClient from "./ShopModelClient";
+import IPhone18ComingSoon from "./IPhone18ComingSoon";
 import type { Product } from "../../components/products/types";
+
+export const revalidate = 3600; // يعيد بناء الصفحة كل ساعة
+
+const IPHONE18_RESERVATION_DATE = new Date(
+  process.env.NEXT_PUBLIC_IPHONE18_RESERVATION_DATE ?? "2026-09-12T23:00:00+03:00"
+);
+
+const IPHONE18_MODELS: Record<string, { name: string; keywords: string[]; slides?: string[]; hero?: HeroSlide[] }> = {
+  "18-pro-max": {
+    name: "آيفون 18 برو ماكس",
+    keywords: ["18 برو ماكس", "18 pro max", "18promax"],
+  },
+  "18": {
+    name: "آيفون 18 برو",
+    keywords: ["18 برو", "18 pro"],
+  },
+  "18-duo": {
+    name: "آيفون 18 دو",
+    keywords: ["18 دو", "18 duo"],
+    slides: [
+      "https://res.cloudinary.com/bzwltpqf/image/upload/v1789095830/background-removed.webp",
+      "https://res.cloudinary.com/bzwltpqf/image/upload/v1789095830/c5a8d90b-ec81-4680-823f-1b460f0dc8ea.webp",
+    ],
+  },
+};
 
 interface HeroSlide {
   image: string;
@@ -75,6 +101,42 @@ const MODEL_MAP: Record<
 
     ],
   },
+   "17": {
+    label: "آيفون 17",
+    keywords: ["ايفون 17", "آيفون 17", "iphone 17"],
+    hero: [
+      {
+        image: "/iphone-17/i-hero1.webp",
+        title: "ملك جمال اللون.",
+        subtitle: "ألوان تخطف الأنظار",
+        highlight: "تخطف الأنظار"
+      },
+      {
+        image: "/iphone-17/i-hero4.webp",
+        title: "الجديد، بالمختصر المفيد.",
+        subtitle: "ستايل جديد. يبهرك بالمزيد.",
+        highlight: "يبهرك بالمزيد"
+      },
+      {
+        image: "/iphone-17/i-hero2.webp",
+        title: "أصلب. وإلى القلب أقرب.",
+        subtitle: "تصميم ينفرد بخطوط انسيابية",
+        highlight: "أصلب"
+      },
+      {
+        image: "/iphone-17/i-hero5.webp",
+        title: "شاشة أكبر. تجربة أمتع.",
+        subtitle: "سوبر ريتنا XDR مع ProMotion حتى 120Hz",
+        highlight: "تجربة أمتع"
+      },
+      {
+        image: "/iphone-17/i-hero3.webp",
+        title: "من بعيد أو قريب، يبهرك.",
+        subtitle: "نظام كاميرا Fusion مزدوجة 48MP",
+        highlight: "يبهرك عندما تصوّر"
+      },
+    ],
+  },
   "16-pro-max": {
     label: "آيفون 16 برو ماكس",
     keywords: ["16 برو ماكس", "16 pro max", "16promax"],
@@ -132,6 +194,8 @@ const MODEL_MAP: Record<
     ],
   },
 
+
+  // samsong
   "galaxy-s26-ultra": {
     label: "سامسونج جالاكسي اس 26 الترا",
     keywords: ["s26 ultra", "galaxy s26 ultra", "اس 26 الترا", "جالاكسي s26 ultra", "s26 ألترا"],
@@ -176,11 +240,6 @@ const MODEL_MAP: Record<
       { image: "https://res.cloudinary.com/bzwltpqf/image/upload/v1788914599/c26f2256-2559-4cad-ba65-8bd6f14f654e.jpg", title: "سامسونج جالاكسي اس 26", subtitle: "تجربة سامسونج الجديدة بالكامل.", highlight: "الجديدة" },
     ],
   },
-
-
-
-
-
   "galaxy-s25-ultra": {
     label: "سامسونج جالاكسي اس 25 الترا",
     keywords: ["s25 ultra", "galaxy s25 ultra", "اس 25 الترا", "جالاكسي s25 ultra"],
@@ -204,7 +263,7 @@ const MODEL_MAP: Record<
   },
 
 
-
+// laptops
   "macbook-air": {
     label: "ماك بوك إير",
     keywords: ["macbook air", "ماك بوك اير", "ماك بوك إير", "macbook إير", "macbook اير"],
@@ -235,46 +294,14 @@ const MODEL_MAP: Record<
       },
     ],
   },
-  "17": {
-    label: "آيفون 17",
-    keywords: ["ايفون 17", "آيفون 17", "iphone 17"],
-    hero: [
-      {
-        image: "/iphone-17/i-hero1.webp",
-        title: "ملك جمال اللون.",
-        subtitle: "ألوان تخطف الأنظار",
-        highlight: "تخطف الأنظار"
-      },
-      {
-        image: "/iphone-17/i-hero4.webp",
-        title: "الجديد، بالمختصر المفيد.",
-        subtitle: "ستايل جديد. يبهرك بالمزيد.",
-        highlight: "يبهرك بالمزيد"
-      },
-      {
-        image: "/iphone-17/i-hero2.webp",
-        title: "أصلب. وإلى القلب أقرب.",
-        subtitle: "تصميم ينفرد بخطوط انسيابية",
-        highlight: "أصلب"
-      },
-      {
-        image: "/iphone-17/i-hero5.webp",
-        title: "شاشة أكبر. تجربة أمتع.",
-        subtitle: "سوبر ريتنا XDR مع ProMotion حتى 120Hz",
-        highlight: "تجربة أمتع"
-      },
-      {
-        image: "/iphone-17/i-hero3.webp",
-        title: "من بعيد أو قريب، يبهرك.",
-        subtitle: "نظام كاميرا Fusion مزدوجة 48MP",
-        highlight: "يبهرك عندما تصوّر"
-      },
-    ],
-  },
+ 
 };
 
 export async function generateStaticParams() {
-  return Object.keys(MODEL_MAP).map((model) => ({ model }));
+  return [
+    ...Object.keys(MODEL_MAP).map((model) => ({ model })),
+    ...Object.keys(IPHONE18_MODELS).map((model) => ({ model })),
+  ];
 }
 
 export default async function ShopModelPage({
@@ -283,6 +310,26 @@ export default async function ShopModelPage({
   params: Promise<{ model: string }>;
 }) {
   const { model } = await params;
+  if (IPHONE18_MODELS[model]) {
+    const cfg = IPHONE18_MODELS[model];
+    const isOver = Date.now() >= IPHONE18_RESERVATION_DATE.getTime();
+
+    if (!isOver) {
+      return <IPhone18ComingSoon modelName={cfg.name} slides={cfg.slides} />;
+    }
+
+    // التاريخ عدى → رجّع الصفحة العادية بالمنتجات
+    const allProducts: Product[] = await getCachedProducts();
+    const products = allProducts.filter((p) => {
+      const name = (p.name || "").toLowerCase();
+      const category = (p.category || "").toLowerCase();
+      return cfg.keywords.some(
+        (kw) => name.includes(kw.toLowerCase()) || category.includes(kw.toLowerCase())
+      );
+    });
+    return <ShopModelClient products={products} modelName={cfg.name} hero={cfg.hero ?? []} />;
+  }
+
   const config = MODEL_MAP[model];
   if (!config) notFound();
 

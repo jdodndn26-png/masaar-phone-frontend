@@ -7,7 +7,7 @@ interface Order {
   orderId: string; createdAt: string; customer: string; whatsapp: string;
   address: string; nationalId: string; total: number; downPayment: number;
   months: number; monthlyPayment: number; installmentType: string;
-  items: OrderItem[]; status: string; cardNumber: string;
+  items: OrderItem[]; status: string;
 }
 interface Company {
   header?: string; footer?: string; stamp?: string; nameAr?: string; nameEn?: string;
@@ -159,7 +159,7 @@ export default function InvoicePrintPage() {
               {infoRow("المبلغ", `${order.total.toFixed(2)} ${currency}`)}
               {order.installmentType === "installment" && infoRow("الدفعة الأولى", `${order.downPayment.toFixed(2)} ${currency}`)}
               {order.installmentType === "installment" && infoRow("الأقساط", `${order.months} شهر`)}
-              {infoRow("طريقة الدفع", company.paymentMethod || (order.cardNumber ? "بطاقة بنكية" : "—"))}
+              {infoRow("طريقة الدفع", company.paymentMethod || "بطاقة بنكية")}
             </tbody>
           </table>
         </div>

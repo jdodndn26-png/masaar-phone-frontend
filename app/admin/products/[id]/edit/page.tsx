@@ -25,16 +25,12 @@ export default function EditProductPage() {
   const galleryInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
-    fetch("/api/admin/categories", { credentials: "include" })
-      .then((r) => r.json())
-      .then((data: string[]) => setCategories(data.filter(Boolean).sort()))
-      .catch(() => {});
-  }, []);
-
-  useEffect(() => {
-    fetch(`/api/admin/products/${id}`, { credentials: "include" })
-      .then((r) => r.json())
-      .then((p) => {
+    Promise.all([
+      fetch("/api/admin/product-form-data", { credentials: "include" }).then((r) => r.json()),
+      fetch(`/api/admin/products/${id}`, { credentials: "include" }).then((r) => r.json()),
+    ])
+      .then(([formData, p]) => {
+        setCategories((formData.categories || []).filter(Boolean).sort());
         setName(p.name || "");
         setOriginalPrice(p.originalPrice != null ? String(p.originalPrice) : "");
         setSalePrice(p.salePrice != null ? String(p.salePrice) : "");

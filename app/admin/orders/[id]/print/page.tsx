@@ -8,7 +8,7 @@ interface Order {
   total: number; downPayment: number; months: number; monthlyPayment: number;
   installmentType: string; items: OrderItem[];
 }
-interface Company { header?: string; footer?: string; nameEn?: string; nameAr?: string; stamp?: string; }
+interface Company { header?: string; footer?: string; nameEn?: string; nameAr?: string; stamp?: string; taxNumber?: string; }
 
 export default function PrintOrderPage() {
   const { id } = useParams<{ id: string }>();
@@ -181,7 +181,7 @@ export default function PrintOrderPage() {
               <p style={{ margin: 0 }}>التوصيل مجاناً من خلال شركة. مندوب توصيل , خلال 24 ساعة من دفع الدفعة المقدمة</p>
             </td>
             <td style={{ padding: 12, textAlign: "right", direction: "rtl", lineHeight: 2 }}>
-              <p style={{ margin: 0 }}>الرقم الضريبي : 314539044300003</p>
+              <p style={{ margin: 0 }}>الرقم الضريبي : {company.taxNumber || ""}</p>
               <p style={{ margin: 0 }}>العرض شامل الهدايا</p>
             </td>
           </tr>

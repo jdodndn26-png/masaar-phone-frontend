@@ -11,7 +11,6 @@ export async function GET(req: NextRequest) {
     const data = await res.json();
     return NextResponse.json(data);
   } catch (e: any) {
-    console.error("GET /api/admin/orders failed:", e.message);
     return NextResponse.json({ error: e.message }, { status: 502 });
   }
 }

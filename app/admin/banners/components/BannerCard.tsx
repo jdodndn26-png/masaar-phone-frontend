@@ -1,13 +1,13 @@
 "use client";
 import Image from "next/image";
-import { API, LABELS } from "../constants";
+import { useRef } from "react";
+import { LABELS } from "../constants";
 import type { BannerItem } from "../types";
 
 interface BannerCardProps {
   banner: BannerItem;
   index: number;
   isLoading: boolean;
-  inputRef: (el: HTMLInputElement | null) => void;
   onUpload: (index: number, file: File) => void;
   onToggle: (index: number) => void;
   onDeleteImage: (index: number) => void;
@@ -15,12 +15,13 @@ interface BannerCardProps {
 }
 
 export default function BannerCard({
-  banner, index, isLoading, inputRef, onUpload, onToggle, onDeleteImage, onDeleteSlot,
+  banner, index, isLoading, onUpload, onToggle, onDeleteImage, onDeleteSlot,
 }: BannerCardProps) {
+  const inputRef = useRef<HTMLInputElement>(null);
   const hasImage = !!banner.url;
 
   const triggerInput = () => {
-    if (!isLoading) (document.querySelector(`input[data-idx="${index}"]`) as HTMLInputElement)?.click();
+    if (!isLoading) inputRef.current?.click();
   };
 
   return (
@@ -50,11 +51,11 @@ export default function BannerCard({
         {hasImage ? (
           <>
             <Image
-              src={banner.url.startsWith("http") ? banner.url : `${API}${banner.url}`}
+              src={banner.url.startsWith("http") ? banner.url : `${process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000"}${banner.url}`}
               alt={LABELS[index] || `بانر ${index + 1}`}
               fill
+              sizes="(max-width: 1280px) 100vw, 50vw"
               className="object-cover transition-transform duration-500 group-hover:scale-105 opacity-90"
-              unoptimized
             />
             <div className="absolute inset-0 bg-black/0 group-hover:bg-black/30 transition-all duration-300 flex items-center justify-center">
               <span className="opacity-0 group-hover:opacity-100 transition-opacity duration-300 bg-white/90 text-gray-800 text-sm font-semibold px-4 py-2 rounded-xl shadow">
@@ -93,7 +94,6 @@ export default function BannerCard({
         <div className="flex items-center gap-2 shrink-0">
           <input
             ref={inputRef}
-            data-idx={index}
             type="file"
             accept="image/*"
             className="hidden"

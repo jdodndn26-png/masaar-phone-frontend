@@ -1,27 +1,7 @@
 "use client";
 import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
-
-function toArabicWords(n: number): string {
-  const ones = ["", "واحد", "اثنان", "ثلاثة", "أربعة", "خمسة", "ستة", "سبعة", "ثمانية", "تسعة",
-    "عشرة", "أحد عشر", "اثنا عشر", "ثلاثة عشر", "أربعة عشر", "خمسة عشر", "ستة عشر",
-    "سبعة عشر", "ثمانية عشر", "تسعة عشر"];
-  const tens = ["", "", "عشرون", "ثلاثون", "أربعون", "خمسون", "ستون", "سبعون", "ثمانون", "تسعون"];
-  const hundreds = ["", "مائة", "مئتان", "ثلاثمائة", "أربعمائة", "خمسمائة", "ستمائة", "سبعمائة", "ثمانمائة", "تسعمائة"];
-  if (n === 0) return "صفر";
-  if (n < 0) return "سالب " + toArabicWords(-n);
-  let result = "";
-  if (n >= 1000) {
-    const t = Math.floor(n / 1000);
-    result += (t === 1 ? "ألف" : t === 2 ? "ألفان" : t <= 10 ? toArabicWords(t) + " آلاف" : toArabicWords(t) + " ألف") + " ";
-    n %= 1000;
-    if (n > 0) result += "و";
-  }
-  if (n >= 100) { result += hundreds[Math.floor(n / 100)] + " "; n %= 100; if (n > 0) result += "و"; }
-  if (n >= 20) { result += tens[Math.floor(n / 10)] + " "; n %= 10; if (n > 0) result += "و"; }
-  if (n > 0) result += ones[n] + " ";
-  return result.trim();
-}
+import { toArabicWords } from "../arabicWords";
 
 interface OrderItem { name: string; }
 interface ReceiptData {
@@ -50,7 +30,6 @@ export default function ReceiptPrintPage() {
   const amount = order.installmentType === "installment" ? order.downPayment : order.total;
   const amountWords = toArabicWords(amount) + " فقط لا غير";
   const aboutPrefix = `قيمة ${order.installmentType === "installment" ? "دفعة من " : ""}ثمن جهاز/أجهزة:`;
-  const aboutItems = order.items.map((i: OrderItem) => i.name);
 
   const style = `
     * { box-sizing: border-box; margin: 0; padding: 0; -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
@@ -63,11 +42,6 @@ export default function ReceiptPrintPage() {
     .receipt-value { text-align: center; }
     .receipt-header-row { display: flex; justify-content: center; margin-bottom: 4px; }
     .receipt-no { font-size: 14px; font-weight: bold; color: #990431; text-align: center; margin-top: 4px; }
-    @media (max-width: 600px) {
-      .receipt-table { font-size: 13px; }
-      .receipt-table td { padding: 5px 7px; }
-      .receipt-no { font-size: 12px; }
-    }
     @media print {
       @page { size: A4; margin: 10mm; }
       body { padding: 0; }
@@ -78,12 +52,8 @@ export default function ReceiptPrintPage() {
   return (
     <div style={{ fontFamily: "Arial, sans-serif", padding: "12px", maxWidth: 700, width: "100%", margin: "0 auto" }} dir="rtl">
       <style>{style}</style>
-{/* header image*/}
-      {company.header && (
-        <img src={company.header} alt="header" style={{ width: "100%", marginBottom: 16 }} />
-      )}
+      {company.header && <img src={company.header} alt="header" style={{ width: "100%", marginBottom: 16 }} />}
 
-      {/* receipt box */}
       <div style={{ border: "2px solid #808080", borderRadius: 8, marginBottom: 16, position: "relative" }}>
         <div className="receipt-header-row">
           <div style={{ display: "flex", flexDirection: "column", alignItems: "center" }}>
@@ -118,9 +88,7 @@ export default function ReceiptPrintPage() {
                 <td colSpan={2} className="receipt-value">
                   {aboutPrefix}
                   <ul style={{ margin: "4px 0 0 0", paddingRight: 20, textAlign: "right" }}>
-                    {aboutItems.map((name: string, idx: number) => (
-                      <li key={idx}>{name}</li>
-                    ))}
+                    {order.items.map((item, idx) => <li key={idx}>{item.name}</li>)}
                   </ul>
                 </td>
               </tr>
@@ -147,10 +115,7 @@ export default function ReceiptPrintPage() {
         </div>
       </div>
 
-      {/* footer image*/}
-      {company.footer && (
-        <img src={company.footer} alt="footer" style={{ width: "100%" }} />
-      )}
+      {company.footer && <img src={company.footer} alt="footer" style={{ width: "100%" }} />}
     </div>
   );
 }

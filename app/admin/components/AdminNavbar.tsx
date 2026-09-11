@@ -3,6 +3,30 @@ import { useEffect, useState } from "react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 
+const LOGO_CACHE_KEY = "admin_logo_cache";
+const LOGO_CACHE_TTL = 30 * 60 * 1000; // 30 دقيقة
+
+function getCachedLogo(): string {
+  try {
+    const raw = localStorage.getItem(LOGO_CACHE_KEY);
+    if (!raw) return "";
+    const { logo, ts } = JSON.parse(raw);
+    if (Date.now() - ts > LOGO_CACHE_TTL) {
+      localStorage.removeItem(LOGO_CACHE_KEY);
+      return "";
+    }
+    return logo || "";
+  } catch {
+    return "";
+  }
+}
+
+function setCachedLogo(logo: string) {
+  try {
+    localStorage.setItem(LOGO_CACHE_KEY, JSON.stringify({ logo, ts: Date.now() }));
+  } catch {}
+}
+
 export default function AdminNavbar({ onMenuClick }: { onMenuClick: () => void }) {
   const router = useRouter();
   const [logo, setLogo] = useState("");
@@ -11,40 +35,61 @@ export default function AdminNavbar({ onMenuClick }: { onMenuClick: () => void }
   useEffect(() => {
     let aborted = false;
 
-    fetch("/api/admin/company", { credentials: "include" })
-      .then((r) => r.json())
-      .then((d) => {
-        if (!aborted && d.logo)
-          setLogo(d.logo.startsWith("http") ? d.logo : `http://localhost:5000${d.logo}`);
+    // اعرض الـ logo من الـ cache فوراً بدون انتظار
+    const cached = getCachedLogo();
+    if (cached) setLogo(cached);
+
+    const ctrl = new AbortController();
+
+    // جلب orders/count دائماً — جلب company فقط لو مفيش cache
+    const fetches: Promise<unknown>[] = [
+      fetch("/api/admin/orders/count", { credentials: "include", signal: ctrl.signal }).then((r) => r.json()),
+    ];
+    if (!cached) {
+      fetches.push(
+        fetch("/api/admin/company", { credentials: "include", signal: ctrl.signal }).then((r) => r.json())
+      );
+    }
+
+    Promise.all(fetches)
+      .then(([countData, company]) => {
+        if (aborted) return;
+        setOrderCount(typeof (countData as { count?: number })?.count === "number" ? (countData as { count: number }).count : 0);
+        if (company) {
+          const c = company as { logo?: string };
+          const logoUrl = c.logo
+            ? (c.logo.startsWith("http") ? c.logo : `http://localhost:5000${c.logo}`)
+            : "";
+          setLogo(logoUrl);
+          setCachedLogo(logoUrl);
+        }
       })
       .catch(() => {});
 
-    let currentCtrl = new AbortController();
-    const loadCount = () => {
-      currentCtrl.abort();
-      currentCtrl = new AbortController();
-      fetch("/api/admin/orders/count", { credentials: "include", signal: currentCtrl.signal })
+    // polling كل 60 ثانية للـ orders/count فقط
+    const interval = setInterval(() => {
+      if (aborted) return;
+      fetch("/api/admin/orders/count", { credentials: "include" })
         .then((r) => r.json())
         .then((d) => { if (!aborted) setOrderCount(typeof d?.count === "number" ? d.count : 0); })
         .catch(() => {});
-    };
-    loadCount();
-    const interval = setInterval(loadCount, 30000);
+    }, 60_000);
+
     return () => {
       aborted = true;
-      currentCtrl.abort();
+      ctrl.abort();
       clearInterval(interval);
     };
   }, []);
 
   async function handleLogout() {
+    localStorage.removeItem(LOGO_CACHE_KEY);
     await fetch("/api/admin/logout", { method: "POST" }).catch(() => {});
     router.push("/admin/login");
   }
 
   return (
     <header className="fixed top-0 right-0 left-0 z-40 h-16 bg-white border-b border-gray-200 flex items-center justify-between px-4">
-      {/* Right: hamburger + logo */}
       <div className="flex items-center gap-3">
         <button
           className="md:hidden p-2 rounded-md text-gray-600 hover:bg-gray-100"
@@ -62,9 +107,7 @@ export default function AdminNavbar({ onMenuClick }: { onMenuClick: () => void }
         )}
       </div>
 
-      {/* Left: notifications + logout */}
       <div className="flex items-center gap-2">
-        {/* Notifications */}
         <button
           onClick={() => router.push("/admin/orders")}
           className="relative p-2 rounded-full text-gray-600 hover:bg-gray-100 transition-colors"
@@ -81,7 +124,6 @@ export default function AdminNavbar({ onMenuClick }: { onMenuClick: () => void }
           )}
         </button>
 
-        {/* Logout */}
         <button
           onClick={handleLogout}
           className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium text-red-600 hover:bg-red-50 transition-colors"

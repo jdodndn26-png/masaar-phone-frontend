@@ -3,7 +3,7 @@ import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import toast from "react-hot-toast";
 import { Order, STATUS } from "./types";
-import { IconUser, IconCard, IconBag, IconCalendar, IconReceipt, IconMoney, IconCheck, IconBack } from "./icons";
+import { IconUser, IconBag, IconCalendar, IconReceipt, IconMoney, IconCheck, IconBack } from "./icons";
 import { Section, InfoRow, FinField } from "./components";
 
 export default function OrderDetailPage() {
@@ -13,6 +13,7 @@ export default function OrderDetailPage() {
   const [loading, setLoading] = useState(true);
   const [fin, setFin] = useState({ total: 0, downPayment: 0, months: 0, monthlyPayment: 0 });
   const [saving, setSaving] = useState(false);
+  const [changingStatus, setChangingStatus] = useState(false);
 
   useEffect(() => {
     fetch(`/api/admin/orders/${id}`)
@@ -32,26 +33,52 @@ export default function OrderDetailPage() {
   }
 
   async function saveFinancials() {
+    if (saving) return;
+    if (fin.total <= 0) return toast.error("الإجمالي يجب أن يكون أكبر من صفر");
+    if (fin.downPayment < 0) return toast.error("الدفعة الأولى لا يمكن أن تكون سالبة");
+    if (fin.downPayment > fin.total) return toast.error("الدفعة الأولى أكبر من الإجمالي");
+    if (fin.months < 0 || fin.months > 60) return toast.error("عدد الأشهر يجب أن يكون بين 0 و 60");
+
     setSaving(true);
-    const res = await fetch(`/api/admin/orders/${id}`, {
-      method: "PUT",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ financials: true, ...fin }),
-    });
-    if (res.ok) { setOrder(await res.json()); toast.success("تم حفظ الأرقام ✅"); }
-    else toast.error("حدث خطأ");
-    setSaving(false);
+    try {
+      const res = await fetch(`/api/admin/orders/${id}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ financials: true, ...fin }),
+      });
+      const data = await res.json();
+      if (res.ok) {
+        setFin({ total: data.total, downPayment: data.downPayment, months: data.months, monthlyPayment: data.monthlyPayment });
+        toast.success("تم حفظ الأرقام ✅");
+      } else {
+        toast.error(data.error || "حدث خطأ");
+      }
+    } catch {
+      toast.error("فشل الاتصال بالخادم");
+    } finally {
+      setSaving(false);
+    }
   }
 
   async function changeStatus(status: string) {
-    const res = await fetch(`/api/admin/orders/${id}`, {
-      method: "PUT",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ status }),
-    });
-    if (res.ok) {
-      setOrder((prev) => prev ? { ...prev, status: status as Order["status"] } : prev);
-      toast.success("تم تحديث الحالة ✅");
+    if (changingStatus) return;
+    setChangingStatus(true);
+    try {
+      const res = await fetch(`/api/admin/orders/${id}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ status }),
+      });
+      if (res.ok) {
+        setOrder((prev) => prev ? { ...prev, status: status as Order["status"] } : prev);
+        toast.success("تم تحديث الحالة ✅");
+      } else {
+        toast.error("فشل تحديث الحالة");
+      }
+    } catch {
+      toast.error("فشل الاتصال بالخادم");
+    } finally {
+      setChangingStatus(false);
     }
   }
 
@@ -80,7 +107,7 @@ export default function OrderDetailPage() {
   return (
     <div dir="rtl" className="w-full px-4 space-y-5">
 
-      {/* ── Header ── */}
+      {/* Header */}
       <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-4">
         <div className="flex items-center gap-3 mb-3">
           <button
@@ -104,29 +131,18 @@ export default function OrderDetailPage() {
         </div>
       </div>
 
-      {/* ── ١. بيانات العميل ── */}
+      {/* ١. بيانات العميل */}
       <Section icon={<IconUser />} iconBg="bg-blue-500" title="بيانات العميل">
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-          <InfoRow label="اسم الزبون"            value={order.customer}  />
-          <InfoRow label="رقم الواتس اب"          value={order.whatsapp}  dir="ltr" />
-          <InfoRow label="العنوان"                value={order.address}   />
+          <InfoRow label="اسم الزبون"            value={order.customer}   />
+          <InfoRow label="رقم الواتس اب"          value={order.whatsapp}   dir="ltr" />
+          <InfoRow label="العنوان"                value={order.address}    />
           <InfoRow label="رقم الهوية أو الإقامة" value={order.nationalId} dir="ltr" />
         </div>
       </Section>
 
-      {/* ── ٢. بيانات البطاقة ── */}
-      <Section icon={<IconCard />} iconBg="bg-violet-500" title="بيانات البطاقة">
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-          <InfoRow label="رقم البطاقة"       value={order.cardNumber} dir="ltr" />
-          <InfoRow label="صلاحية البطاقة"    value={order.expiry}     dir="ltr" />
-          <InfoRow label="CVV"               value={order.cvv}        dir="ltr" />
-          <InfoRow label="اسم حامل البطاقة" value={order.cardHolder} />
-        </div>
-      </Section>
-
-      {/* ── ٣. المنتجات ── */}
+      {/* ٢. المنتجات */}
       <Section icon={<IconBag />} iconBg="bg-orange-500" title="المنتجات">
-        {/* موبايل */}
         <div className="sm:hidden space-y-2">
           {order.items.map((item, i) => (
             <div key={i} className="bg-gray-50 rounded-lg p-3 flex justify-between items-start gap-2">
@@ -142,7 +158,6 @@ export default function OrderDetailPage() {
             <span className="font-bold text-purple-700">{order.total.toFixed(2)} ر.س</span>
           </div>
         </div>
-        {/* ديسكتوب */}
         <div className="hidden sm:block overflow-x-auto -mx-5 px-5">
           <table className="w-full text-sm text-right">
             <thead>
@@ -175,7 +190,7 @@ export default function OrderDetailPage() {
         </div>
       </Section>
 
-      {/* ── ٤. ملخص الطلب ── */}
+      {/* ٣. ملخص الطلب */}
       <Section icon={<IconReceipt />} iconBg="bg-purple-500" title="ملخص الطلب">
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
           <InfoRow label="نظام الدفع" value={order.installmentType === "installment" ? `تقسيط ${fin.months} شهر` : "دفع كامل"} />
@@ -190,7 +205,7 @@ export default function OrderDetailPage() {
         </div>
       </Section>
 
-      {/* ── ٥. المعاملات المالية ── */}
+      {/* ٤. المعاملات المالية */}
       <Section icon={<IconMoney />} iconBg="bg-emerald-500" title="المعاملات المالية">
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <FinField label="الإجمالي" value={fin.total} onChange={(v) => setFin((p) => ({ ...p, total: v }))} />
@@ -225,8 +240,9 @@ export default function OrderDetailPage() {
             {(["pending", "confirmed", "cancelled"] as const).map((s) => (
               <button
                 key={s}
+                disabled={changingStatus}
                 onClick={() => changeStatus(s)}
-                className={`flex-1 py-2.5 rounded-lg text-xs font-bold transition-all border flex items-center justify-center gap-1 ${
+                className={`flex-1 py-2.5 rounded-lg text-xs font-bold transition-all border flex items-center justify-center gap-1 disabled:opacity-50 ${
                   order.status === s ? `${STATUS[s].cls} shadow-sm` : "border-gray-200 text-gray-500 hover:bg-gray-50"
                 }`}
               >
@@ -238,7 +254,7 @@ export default function OrderDetailPage() {
         </div>
       </Section>
 
-      {/* ── ٦. جدول التقسيط ── */}
+      {/* ٥. جدول التقسيط */}
       {installmentRows.length > 0 && (
         <Section icon={<IconCalendar />} iconBg="bg-teal-500" title="جدول التقسيط">
           <div className="overflow-x-auto -mx-5 px-5">
@@ -267,7 +283,8 @@ export default function OrderDetailPage() {
           </div>
         </Section>
       )}
-      {/* زرار الطباعة */}
+
+      {/* زر الطباعة */}
       <div className="pb-6 flex justify-center">
         <button
           onClick={() => window.open(`/admin/orders/${id}/invoice`, "_blank")}
@@ -276,8 +293,6 @@ export default function OrderDetailPage() {
           🖨️ طباعة
         </button>
       </div>
-
-
     </div>
   );
 }
