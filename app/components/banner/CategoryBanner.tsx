@@ -1,5 +1,4 @@
 "use client";
-import Image from "next/image";
 import { useState, useEffect } from "react";
 
 export default function CategoryBanner({ category, images }: { category: string; images?: string[] }) {
@@ -17,28 +16,26 @@ export default function CategoryBanner({ category, images }: { category: string;
 
   return (
     <div className="px-1 sm:px-5 lg:px-8 py-2">
-      <section
-        className="relative w-full overflow-hidden"
-        style={{
-          borderRadius: "20px",
-          boxShadow: "0 8px 40px rgba(0,0,0,0.18), 0 2px 8px rgba(0,0,0,0.10)",
-          aspectRatio: "16/9",
-        }}
-      >
+      <section className="relative w-full">
+        {/* first image is relative to define height; others are absolute on top */}
         {images.map((src, i) => (
           <div
             key={i}
-            className="absolute inset-0 transition-opacity duration-700"
-            style={{ opacity: i === current ? 1 : 0, zIndex: i === current ? 1 : 0 }}
+            className="transition-opacity duration-700"
+            style={{
+              position: i === 0 ? "relative" : "absolute",
+              inset: i === 0 ? undefined : 0,
+              opacity: i === current ? 1 : 0,
+              pointerEvents: i === current ? "auto" : "none",
+            }}
           >
-            <Image
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
               src={src}
               alt={`${category} بانر ${i + 1}`}
-              fill
-              className="object-cover"
-              sizes="(max-width: 640px) 100vw, (max-width: 1024px) 90vw, 1400px"
-              loading="lazy"
-              quality={75}
+              style={{ display: "block", width: "100%", height: "auto" }}
+              fetchPriority={i === 0 ? "high" : "auto"}
+              loading={i === 0 ? "eager" : "lazy"}
             />
           </div>
         ))}

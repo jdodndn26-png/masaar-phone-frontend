@@ -96,4 +96,6 @@ export interface Product {
   subCategory?: string;
   brand?: string;
   inStock: boolean;
+  status?: "PRE_LAUNCH" | "AVAILABLE" | "OUT_OF_STOCK";
+  purchasable?: boolean;
 }

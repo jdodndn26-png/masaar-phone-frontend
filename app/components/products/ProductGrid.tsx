@@ -72,9 +72,11 @@ const CategoryRow = memo(function CategoryRow({ category, items, isFirst }: { ca
         </Link>
       </div>
       <div className="border-t-2 border-dashed border-[#0B43FD]/20 mb-4 sm:mb-6" />
-      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-5">
+      <div className="flex sm:grid sm:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-5 overflow-x-auto pb-2 sm:overflow-visible sm:pb-0 snap-x snap-mandatory scrollbar-hide">
         {visible.map((p, i) => (
-          <ProductCard key={p._id} product={p} priority={isFirst && i === 0} />
+          <div key={p._id} className="min-w-[52vw] max-w-[52vw] sm:min-w-0 sm:max-w-none snap-start">
+            <ProductCard product={p} priority={isFirst && i === 0} />
+          </div>
         ))}
       </div>
     </div>

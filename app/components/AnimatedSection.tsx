@@ -11,14 +11,20 @@ export default function AnimatedSection({
   className?: string;
 }) {
   const ref = useRef<HTMLDivElement>(null);
-  const [visible, setVisible] = useState(false);
+  // start visible so content renders immediately (no hidden flash on load)
+  const [animated, setAnimated] = useState(false);
 
   useEffect(() => {
     const el = ref.current;
     if (!el) return;
     const observer = new IntersectionObserver(
-      ([entry]) => { if (entry.isIntersecting) { setVisible(true); observer.disconnect(); } },
-      { rootMargin: "-80px" }
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          setAnimated(true);
+          observer.disconnect();
+        }
+      },
+      { rootMargin: "0px" }
     );
     observer.observe(el);
     return () => observer.disconnect();
@@ -29,9 +35,9 @@ export default function AnimatedSection({
       ref={ref}
       className={className}
       style={{
-        opacity: visible ? 1 : 0,
-        transform: visible ? "translateY(0)" : "translateY(40px)",
-        transition: `opacity 0.6s ease-out ${delay}s, transform 0.6s ease-out ${delay}s`,
+        opacity: animated ? 1 : 0.85,
+        transform: animated ? "translateY(0)" : "translateY(12px)",
+        transition: `opacity 0.45s ease-out ${delay}s, transform 0.45s ease-out ${delay}s`,
       }}
     >
       {children}

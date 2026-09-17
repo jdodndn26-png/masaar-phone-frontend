@@ -23,10 +23,12 @@ export default async function Home() {
     getCachedReviews(),
   ]);
 
-  const heroBanners = (rawBanners as { url: string; active: boolean }[]).map((b) => ({
-    ...b,
-    url: b.url ? (b.url.startsWith("http") ? b.url : `${BACKEND}${b.url}`) : "",
-  }));
+  const heroBanners = (rawBanners as { url: string; active: boolean }[])
+    .filter((b) => b.url && b.active)
+    .map((b) => ({
+      ...b,
+      url: b.url.startsWith("http") ? b.url : `${BACKEND}${b.url}`,
+    }));
 
   const categories = [
     ...new Set(

@@ -9,6 +9,8 @@ type Product = {
   category: string;
   originalPrice: number;
   salePrice?: number;
+  status?: "PRE_LAUNCH" | "AVAILABLE" | "OUT_OF_STOCK";
+  purchasable?: boolean;
 };
 
 type SubCat = { name: string; category: string; count: number };
@@ -32,6 +34,8 @@ export default function ProductsPage() {
   const [selectedCat, setSelectedCat] = useState<string | null>(null);
   const [search, setSearch] = useState("");
   const [confirmDelete, setConfirmDelete] = useState<{ id: string; name: string } | null>(null);
+  const [confirmSaleToggle, setConfirmSaleToggle] = useState<{ id: string; name: string; open: boolean } | null>(null);
+  const [saleLoading, setSaleLoading] = useState<string | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
   const [loading, setLoading] = useState(true);
   const PAGE_SIZE = 10;
@@ -58,6 +62,29 @@ export default function ProductsPage() {
     if (!res.ok) return toast.error(data.message || "فشل الحذف");
     toast.success(`تم حذف "${name}" بنجاح ✅`);
     setProducts((prev) => prev.filter((p) => p._id !== id));
+  }
+
+  async function confirmSaleToggleAction() {
+    if (!confirmSaleToggle) return;
+    const { id, open } = confirmSaleToggle;
+    setConfirmSaleToggle(null);
+    setSaleLoading(id);
+    try {
+      const res = await fetch(`/api/admin/products/${id}/purchase-status`, {
+        method: "PATCH",
+        credentials: "include",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ purchasable: open }),
+      });
+      const data = await res.json();
+      if (!res.ok) return toast.error(data.error || "فشل تغيير الحالة");
+      setProducts((prev) =>
+        prev.map((p) => p._id === id ? { ...p, purchasable: data.purchasable, status: data.status } : p)
+      );
+      toast.success(open ? "تم فتح البيع بنجاح ✅" : "تم إغلاق البيع بنجاح ✅");
+    } finally {
+      setSaleLoading(null);
+    }
   }
 
   const filtered = products.filter((p) => {
@@ -126,6 +153,7 @@ export default function ProductsPage() {
                 <th className="px-5 py-3 min-w-[200px]">الاسم</th>
                 <th className="px-5 py-3 min-w-[140px]">التصنيف</th>
                 <th className="px-5 py-3 min-w-[130px]">السعر</th>
+                <th className="px-5 py-3 min-w-[160px]">حالة البيع</th>
                 <th className="px-5 py-3 min-w-[100px]">إجراءات</th>
               </tr>
             </thead>
@@ -157,6 +185,38 @@ export default function ProductsPage() {
                       ) : (
                         <span>{p.originalPrice} ر.س</span>
                       )}
+                    </td>
+                    <td className="px-5 py-3">
+                      {(() => {
+                        const isPurchasable = p.purchasable !== false;
+                        const status = p.status ?? (isPurchasable ? "AVAILABLE" : "PRE_LAUNCH");
+                        return (
+                          <div className="flex flex-col gap-1.5">
+                            <span className={`inline-flex items-center gap-1 text-[11px] font-bold px-2 py-0.5 rounded-md w-fit ${
+                              status === "AVAILABLE" ? "bg-emerald-50 text-emerald-700" :
+                              status === "PRE_LAUNCH" ? "bg-amber-50 text-amber-700" :
+                              "bg-red-50 text-red-600"
+                            }`}>
+                              <span className={`w-1.5 h-1.5 rounded-full ${
+                                status === "AVAILABLE" ? "bg-emerald-500" :
+                                status === "PRE_LAUNCH" ? "bg-amber-500" : "bg-red-500"
+                              }`} />
+                              {status}
+                            </span>
+                            <button
+                              onClick={() => setConfirmSaleToggle({ id: p._id, name: p.name, open: !isPurchasable })}
+                              disabled={saleLoading === p._id}
+                              className={`text-[11px] font-bold px-2.5 py-1 rounded-lg transition-colors disabled:opacity-50 ${
+                                isPurchasable
+                                  ? "bg-red-50 text-red-600 hover:bg-red-100"
+                                  : "bg-emerald-50 text-emerald-700 hover:bg-emerald-100"
+                              }`}
+                            >
+                              {saleLoading === p._id ? "جاري..." : isPurchasable ? "إغلاق البيع" : "فتح البيع"}
+                            </button>
+                          </div>
+                        );
+                      })()}
                     </td>
                     <td className="px-5 py-3">
                       <div className="flex items-center gap-3">
@@ -236,6 +296,36 @@ export default function ProductsPage() {
                 نعم، احذف
               </button>
               <button onClick={() => setConfirmDelete(null)} className="border border-gray-300 text-gray-700 text-sm font-bold px-6 py-2 rounded-lg hover:bg-gray-50 transition-colors">
+                إلغاء
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {confirmSaleToggle && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 px-4" dir="rtl">
+          <div className="bg-white rounded-xl shadow-xl p-6 w-full max-w-sm text-center">
+            <div className="text-4xl mb-3">{confirmSaleToggle.open ? "🟢" : "🔴"}</div>
+            <h2 className="text-lg font-bold text-gray-800 mb-2">
+              {confirmSaleToggle.open ? "فتح البيع" : "إغلاق البيع"}
+            </h2>
+            <p className="text-base font-bold text-gray-700 mb-2">« {confirmSaleToggle.name} »</p>
+            <p className="text-sm text-gray-500 mb-5">
+              {confirmSaleToggle.open
+                ? "بعد التأكيد سيتمكن العملاء من إضافة المنتج للسلة وشرائه."
+                : "بعد التأكيد لن يتمكن أي عميل من شراء هذا المنتج."}
+            </p>
+            <div className="flex gap-3 justify-center">
+              <button
+                onClick={confirmSaleToggleAction}
+                className={`text-white text-sm font-bold px-6 py-2 rounded-lg transition-colors ${
+                  confirmSaleToggle.open ? "bg-emerald-600 hover:bg-emerald-700" : "bg-red-500 hover:bg-red-600"
+                }`}
+              >
+                تأكيد
+              </button>
+              <button onClick={() => setConfirmSaleToggle(null)} className="border border-gray-300 text-gray-700 text-sm font-bold px-6 py-2 rounded-lg hover:bg-gray-50 transition-colors">
                 إلغاء
               </button>
             </div>

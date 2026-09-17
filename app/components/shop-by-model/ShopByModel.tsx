@@ -19,7 +19,7 @@ export default function ShopByModel() {
       <div className="max-w-[1380px] mx-auto px-4 sm:px-8">
 
         {/* Header */}
-        <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4 mb-10 sm:mb-14">
+        <div className="flex flex-row items-center justify-between gap-4 mb-10 sm:mb-14">
           <div>
             <div className="inline-flex items-center gap-2 bg-[#0B43FD]/8 text-[#0B43FD] text-[0.72rem] font-bold px-3 py-1.5 rounded-full mb-3 border border-[#0B43FD]/12 tracking-wide uppercase">
               <span className="w-1.5 h-1.5 rounded-full bg-[#0B43FD]" />
@@ -33,18 +33,18 @@ export default function ShopByModel() {
             </h2>
           </div>
 
-          <div className="hidden sm:flex items-center gap-2 shrink-0">
+          <div className="flex items-center gap-1.5 shrink-0">
             <button
-              className="swiper-models-prev w-10 h-10 rounded-full bg-white border border-[#e5e7eb] shadow-sm flex items-center justify-center text-[#374151] transition-all duration-200 hover:bg-[#0B43FD] hover:text-white hover:border-[#0B43FD] hover:shadow-[0_4px_14px_rgba(11,67,253,0.3)] disabled:opacity-30"
+              className="swiper-models-prev w-9 h-9 sm:w-10 sm:h-10 rounded-full bg-white border border-[#e5e7eb] shadow-sm flex items-center justify-center text-[#374151] transition-all duration-200 hover:bg-[#0B43FD] hover:text-white hover:border-[#0B43FD] hover:shadow-[0_4px_14px_rgba(11,67,253,0.3)] disabled:opacity-30"
               aria-label="السابق"
             >
-              <HiArrowRight size={16} />
+              <HiArrowRight size={15} />
             </button>
             <button
-              className="swiper-models-next w-10 h-10 rounded-full bg-white border border-[#e5e7eb] shadow-sm flex items-center justify-center text-[#374151] transition-all duration-200 hover:bg-[#0B43FD] hover:text-white hover:border-[#0B43FD] hover:shadow-[0_4px_14px_rgba(11,67,253,0.3)] disabled:opacity-30"
+              className="swiper-models-next w-9 h-9 sm:w-10 sm:h-10 rounded-full bg-white border border-[#e5e7eb] shadow-sm flex items-center justify-center text-[#374151] transition-all duration-200 hover:bg-[#0B43FD] hover:text-white hover:border-[#0B43FD] hover:shadow-[0_4px_14px_rgba(11,67,253,0.3)] disabled:opacity-30"
               aria-label="التالي"
             >
-              <HiArrowLeft size={16} />
+              <HiArrowLeft size={15} />
             </button>
           </div>
         </div>

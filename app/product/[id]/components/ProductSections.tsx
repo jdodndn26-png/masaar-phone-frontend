@@ -251,13 +251,14 @@ function LensesCard({ lensesCard }: { lensesCard: { image: string; lenses: { nam
 
 function CameraSection({ section }: { section: ProductSection }) {
   const content = section.content as Record<string, unknown>;
-  const hero = content?.hero as { stats: { value: string; label: string }[]; description: string } | undefined;
+  const hero = content?.hero as { stats: { value: string; label: string }[]; description: string; image?: string } | undefined;
   const zoomLevels = content?.zoomLevels as { label: string; image: string }[] ?? [];
   const zoomFooter = content?.zoomFooter as { text: string; image?: string } | undefined;
   const lensesCard = content?.lensesCard as { image: string; lenses: { name: string; model: string; specs: string[] }[] } | undefined;
   const privacyDisplay = content?.privacyDisplay as { title: string; subtitle: string; description: string; images: { image: string; title: string; description: string }[] } | undefined;
   const proPhotos = content?.proPhotos as { title: string; items: { image: string; label: string }[] } | undefined;
   const video = content?.video as { title: string; subtitle: string; description: string; image: string } | undefined;
+  const proVideo = content?.proVideo as { title: string; items: { image: string; label: string }[] } | undefined;
 
   const [activeZoom, setActiveZoom] = useState(0);
 
@@ -277,10 +278,10 @@ function CameraSection({ section }: { section: ProductSection }) {
       </InView>
 
       {/* Hero – full bleed with stats */}
-      {section.media?.[0]?.url && hero && (
+      {hero && (section.media?.[0]?.url || hero.image) && (
         <InView>
           <motion.div variants={fadeUp} className="relative rounded-2xl sm:rounded-3xl overflow-hidden mb-4" style={{ minHeight: "clamp(300px, 55vw, 480px)" }}>
-            <Image src={section.media[0].url} alt={section.media[0].alt ?? ""} fill className="object-cover" sizes="(max-width: 1152px) 100vw, 1152px" />
+            <Image src={(section.media?.[0]?.url ?? hero.image)!} alt={section.media?.[0]?.alt ?? ""} fill className="object-cover" sizes="(max-width: 1152px) 100vw, 1152px" />
             <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/50 to-black/10" />
 
             <div className="relative z-10 flex flex-col justify-end h-full p-4 sm:p-10" style={{ minHeight: "clamp(300px, 55vw, 480px)" }}>
@@ -376,24 +377,6 @@ function CameraSection({ section }: { section: ProductSection }) {
       {/* Lenses Card */}
       {lensesCard && <LensesCard lensesCard={lensesCard} />}
 
-      {/* Pro Photos – horizontal scroll */}
-      {proPhotos && (
-        <InView>
-          <motion.div variants={fadeUp} className="mb-4">
-            <p className="text-sm sm:text-base font-black text-gray-900 mb-3" dir="rtl">{proPhotos.title}</p>
-            <div className="flex gap-3 overflow-x-auto scrollbar-hide pb-1">
-              {proPhotos.items.map((item, i) => (
-                <div key={i} className="relative rounded-2xl overflow-hidden shrink-0" style={{ width: "clamp(220px, 60vw, 320px)", aspectRatio: "3/4" }}>
-                  <Image src={item.image} alt={item.label} fill className="object-cover" sizes="320px" />
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
-                  <p className="absolute bottom-0 inset-x-0 p-3 text-white text-[11px] sm:text-xs font-semibold leading-snug">{item.label}</p>
-                </div>
-              ))}
-            </div>
-          </motion.div>
-        </InView>
-      )}
-
       {/* Privacy Display */}
       {privacyDisplay && (
         <InView>
@@ -415,12 +398,30 @@ function CameraSection({ section }: { section: ProductSection }) {
       {/* Video */}
       {video && (
         <InView>
-          <motion.div variants={fadeUp} className="relative rounded-2xl sm:rounded-3xl overflow-hidden" style={{ minHeight: "clamp(240px, 50vw, 420px)" }}>
+          <motion.div variants={fadeUp} className="relative rounded-2xl sm:rounded-3xl overflow-hidden mb-4" style={{ minHeight: "clamp(240px, 50vw, 420px)" }}>
             <Image src={video.image} alt={video.title} fill className="object-cover" sizes="(max-width: 1152px) 100vw, 1152px" />
             <div className="absolute inset-0 flex flex-col justify-end p-4 sm:p-10">
               <p className="text-[10px] font-black tracking-widest uppercase text-white/40 mb-1">{video.title}</p>
               <p className="text-base sm:text-2xl font-black text-white mb-2 leading-snug">{video.subtitle}</p>
               <ExpandableText text={video.description} className="text-xs sm:text-sm text-white/60 leading-relaxed max-w-2xl" />
+            </div>
+          </motion.div>
+        </InView>
+      )}
+
+      {/* Pro Video – horizontal scroll */}
+      {proVideo && (
+        <InView>
+          <motion.div variants={fadeUp} className="mb-4">
+            <p className="text-sm sm:text-base font-black text-gray-900 mb-3" dir="rtl">{proVideo.title}</p>
+            <div className="flex gap-3 overflow-x-auto scrollbar-hide pb-1">
+              {proVideo.items.map((item, i) => (
+                <div key={i} className="relative rounded-2xl overflow-hidden shrink-0" style={{ width: "clamp(220px, 60vw, 320px)", aspectRatio: "3/4" }}>
+                  <Image src={item.image} alt={item.label} fill className="object-cover" sizes="320px" />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
+                  <p className="absolute bottom-0 inset-x-0 p-3 text-white text-[11px] sm:text-xs font-semibold leading-snug">{item.label}</p>
+                </div>
+              ))}
             </div>
           </motion.div>
         </InView>

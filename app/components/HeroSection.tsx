@@ -1,5 +1,4 @@
 "use client";
-import Image from "next/image";
 import { useEffect, useState } from "react";
 
 interface Banner {
@@ -8,7 +7,8 @@ interface Banner {
 }
 
 export default function HeroSection({ banners }: { banners: Banner[] }) {
-  const active = banners.filter((b) => b.url && b.active);
+  // banners are already filtered (active only) by the server component
+  const active = banners;
   const [current, setCurrent] = useState(0);
 
   useEffect(() => {
@@ -21,29 +21,26 @@ export default function HeroSection({ banners }: { banners: Banner[] }) {
 
   return (
     <div className="px-1 sm:px-5 lg:px-8 pt-4 pb-2">
-      <section
-        className="relative w-full overflow-hidden"
-        style={{
-          borderRadius: "20px",
-          boxShadow: "0 8px 40px rgba(0,0,0,0.18), 0 2px 8px rgba(0,0,0,0.10)",
-          paddingBottom: "56.25%",
-          height: 0,
-        }}
-      >
+      <section className="relative w-full">
+        {/* stack all banners on top of each other; the first one defines the height */}
         {active.map((b, i) => (
           <div
             key={b.url}
-            className="absolute inset-0 transition-opacity duration-700"
-            style={{ opacity: i === current ? 1 : 0 }}
+            className="transition-opacity duration-700"
+            style={{
+              position: i === 0 ? "relative" : "absolute",
+              inset: i === 0 ? undefined : 0,
+              opacity: i === current ? 1 : 0,
+              pointerEvents: i === current ? "auto" : "none",
+            }}
           >
-            <Image
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
               src={b.url}
               alt={`banner-${i + 1}`}
-              fill
-              priority={i === 0}
+              style={{ display: "block", width: "100%", height: "auto" }}
+              fetchPriority={i === 0 ? "high" : "auto"}
               loading={i === 0 ? "eager" : "lazy"}
-              className="object-contain"
-              quality={75}
             />
           </div>
         ))}

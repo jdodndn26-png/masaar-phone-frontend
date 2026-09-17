@@ -32,8 +32,6 @@ function ProductCard({ product, priority = false }: { product: Product; priority
   };
   const [activeStorageIdx, setActiveStorageIdx] = useState(() => getDefaultStorageIdx(product.variants?.[0]));
   const [added, setAdded] = useState(false);
-  const [storageExpanded, setStorageExpanded] = useState(false);
-  const VISIBLE_OPTS = 3;
 
   const activeVariant: ProductVariant | undefined = hasVariants ? product.variants![activeVariantIdx] : undefined;
   const allStorageOptions = (hasVariants ? activeVariant?.storageOptions : undefined) ?? product.variants?.[0]?.storageOptions ?? [];
@@ -71,19 +69,13 @@ function ProductCard({ product, priority = false }: { product: Product; priority
       className="flex flex-col rounded-2xl overflow-hidden bg-white border border-[#e8edf5] hover:border-[#0B43FD]/30 hover:shadow-[0_8px_28px_rgba(11,67,253,0.10)] transition-all duration-200"
     >
       {/* ── Image ── */}
-      <Link href={`/product/${product._id}`} className="relative w-full aspect-square bg-white overflow-hidden cursor-pointer block">
+      <Link href={`/product/${product._id}`} className="relative w-full aspect-[4/3] sm:aspect-square bg-white overflow-hidden cursor-pointer block">
         {discountPct > 0 && (
           <span className="absolute top-2 right-2 z-10 bg-[#0B43FD] text-white text-[10px] font-black px-2 py-0.5 rounded-full">
             -{discountPct}%
           </span>
         )}
-        {(product.warrantyYears > 0 || product.installment?.available) && (
-          <span className="absolute top-2 left-2 z-10 flex items-center gap-1 bg-white/90 border border-gray-200 px-1.5 py-0.5 rounded-full text-[9px] font-bold text-[#155E6F]">
-            {product.warrantyYears > 0
-              ? <><Icon icon="solar:shield-check-bold" width={11} />ضمان {product.warrantyYears}س</>
-              : <><Icon icon="solar:card-bold" width={11} className="text-[#0B43FD]" /><span className="text-[#0B43FD]">تقسيط</span></>}
-          </span>
-        )}
+
         {mainImage && (
           <Image src={mainImage} alt={product.name} fill priority={priority}
             loading={priority ? "eager" : "lazy"}
@@ -116,52 +108,34 @@ function ProductCard({ product, priority = false }: { product: Product; priority
 
         {/* Storage */}
         {allStorageOptions.length > 1 && (
-          <div className="flex flex-col gap-1">
-            <div className="flex flex-wrap gap-1">
-              {(storageExpanded ? allStorageOptions : allStorageOptions.slice(0, VISIBLE_OPTS)).map((opt, i) => {
-                const isActive = activeStorageIdx === i;
-                return (
-                  <button key={`${activeVariantIdx}-${i}-${opt.storage}-${opt.chip ?? ""}`}
-                    onClick={(e) => { e.preventDefault(); e.stopPropagation(); setActiveStorageIdx(i); }}
-                    className={`flex flex-col items-center justify-center px-2 sm:px-3 py-1 sm:py-1.5 rounded-lg sm:rounded-xl border cursor-pointer transition-all duration-150 ${
-                      isActive
-                        ? "bg-[#0B43FD] text-white border-[#0B43FD] shadow-sm shadow-[#0B43FD]/20"
-                        : "bg-white text-[#0B43FD] border-[#0B43FD]/30 hover:border-[#0B43FD]/60"
-                    }`}
-                  >
-                    {opt.chip && (
-                      <span className={`text-[8px] sm:text-[9px] font-black leading-tight ${
-                        isActive ? "text-white" : "text-gray-800"
-                      }`}>{opt.chip}</span>
-                    )}
-                    <span className="text-[9px] sm:text-[11px] font-black leading-tight">{opt.storage}</span>
-                    {(opt.ram || opt.size) && (
-                      <span className={`text-[7px] sm:text-[8px] font-bold leading-tight ${
-                        isActive ? "text-white/70" : "text-gray-400"
-                      }`}>
-                        {opt.size ?? ""}{opt.size && opt.ram ? " • " : ""}{opt.ram ?? ""}
-                      </span>
-                    )}
-                  </button>
-                );
-              })}
-            </div>
-            {allStorageOptions.length > VISIBLE_OPTS && (
-              <button
-                onClick={(e) => { e.preventDefault(); e.stopPropagation(); setStorageExpanded(v => !v); }}
-                className="flex items-center justify-center gap-1 w-full py-1 rounded-lg border border-dashed border-[#0B43FD]/20 text-[#0B43FD]/50 hover:border-[#0B43FD]/50 hover:text-[#0B43FD] hover:bg-[#0B43FD]/5 transition-all duration-150 cursor-pointer"
-              >
-                <span className="text-[9px] sm:text-[10px] font-bold">
-                  {storageExpanded ? "عرض أقل" : `${allStorageOptions.length - VISIBLE_OPTS} خيارات أخرى`}
-                </span>
-                <svg
-                  width="10" height="10" viewBox="0 0 10 10" fill="none"
-                  className={`transition-transform duration-200 ${storageExpanded ? "rotate-180" : ""}`}
+          <div className="flex flex-wrap gap-1">
+            {allStorageOptions.map((opt, i) => {
+              const isActive = activeStorageIdx === i;
+              return (
+                <button key={`${activeVariantIdx}-${i}-${opt.storage}-${opt.chip ?? ""}`}
+                  onClick={(e) => { e.preventDefault(); e.stopPropagation(); setActiveStorageIdx(i); }}
+                  className={`flex flex-col items-center justify-center px-2 sm:px-3 py-1 sm:py-1.5 rounded-lg sm:rounded-xl border cursor-pointer transition-all duration-150 ${
+                    isActive
+                      ? "bg-[#0B43FD] text-white border-[#0B43FD] shadow-sm shadow-[#0B43FD]/20"
+                      : "bg-white text-[#0B43FD] border-[#0B43FD]/30 hover:border-[#0B43FD]/60"
+                  }`}
                 >
-                  <path d="M2 3.5L5 6.5L8 3.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-                </svg>
-              </button>
-            )}
+                  {opt.chip && (
+                    <span className={`text-[8px] sm:text-[9px] font-black leading-tight ${
+                      isActive ? "text-white" : "text-gray-800"
+                    }`}>{opt.chip}</span>
+                  )}
+                  <span className="text-[9px] sm:text-[11px] font-black leading-tight">{opt.storage}</span>
+                  {(opt.ram || opt.size) && (
+                    <span className={`text-[7px] sm:text-[8px] font-bold leading-tight ${
+                      isActive ? "text-white/70" : "text-gray-400"
+                    }`}>
+                      {opt.size ?? ""}{opt.size && opt.ram ? " • " : ""}{opt.ram ?? ""}
+                    </span>
+                  )}
+                </button>
+              );
+            })}
           </div>
         )}
 
@@ -171,6 +145,23 @@ function ProductCard({ product, priority = false }: { product: Product; priority
           <span className="text-[9px] sm:text-[10px] font-bold text-[#0B43FD]/60">ر.س</span>
           {hasDiscount && <span className="text-[9px] sm:text-[10px] text-gray-400 line-through">{fmt(originalPrice)}</span>}
         </div>
+
+        {/* Installment */}
+        {displayPrice > 1000 && (
+          <div className="flex items-center justify-between gap-1.5 bg-gradient-to-l from-[#0B43FD]/10 to-[#e8eeff] border border-[#0B43FD]/20 rounded-lg px-2 py-1">
+            <div className="flex items-center gap-1">
+              <Icon icon="solar:card-bold" width={11} className="text-[#0B43FD] shrink-0" />
+              <span className="text-[8px] sm:text-[9px] font-bold text-gray-500">أو قسّطها</span>
+            </div>
+            <div className="flex items-baseline gap-0.5">
+              <span className="text-[11px] sm:text-[12px] font-black text-[#0B43FD] leading-none">
+                {fmt(Math.ceil((displayPrice - 1000) / 24))}
+              </span>
+              <span className="text-[7px] sm:text-[8px] font-bold text-[#0B43FD]/70">ر.س</span>
+              <span className="text-[7px] sm:text-[8px] font-semibold text-gray-400">× 24 شهر</span>
+            </div>
+          </div>
+        )}
 
         {/* CTA */}
         <button onClick={handleAddToCart} disabled={!product.inStock}

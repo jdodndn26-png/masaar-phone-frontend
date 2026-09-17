@@ -82,6 +82,8 @@ export async function POST(req: NextRequest) {
           return NextResponse.json({ ok: false, error: "أحد المنتجات غير موجود" }, { status: 400 });
         if (product.inStock === false)
           return NextResponse.json({ ok: false, error: `المنتج "${product.name}" غير متوفر في المخزون حالياً` }, { status: 400 });
+        if (product.purchasable === false)
+          return NextResponse.json({ ok: false, error: `هذا المنتج غير متاح للبيع حالياً` }, { status: 403 });
 
         const actualPrice = product.salePrice ?? product.originalPrice ?? product.price ?? 0;
         if (Math.abs(actualPrice - (item.price ?? 0)) > 1)

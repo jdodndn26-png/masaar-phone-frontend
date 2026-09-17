@@ -29,12 +29,11 @@ export const SHOP_PRODUCTS: ShopProduct[] = [
     storage: ["256GB", "512GB", "1TB", "2TB"],
     imagePadding: "p-1",
     imageScale: "scale-[1.6]",
-    comingSoon: true,
   },
   {
-    id: "18",
+    id: "18-pro",
     name: "آيفون 18 برو",
-    subtitle: "iPhone 18",
+    subtitle: "iPhone 18 Pro",
     colors: [
             { name: "Glacier", value: "#DCE6F0", image: "https://res.cloudinary.com/bzwltpqf/image/upload/v1789095297/96bef8db-6a7f-4361-b75b-330d54685d37_1.webp" },
 
@@ -45,7 +44,6 @@ export const SHOP_PRODUCTS: ShopProduct[] = [
     storage: ["256GB", "512GB", "1TB", "2TB"],
     imagePadding: "p-1",
     imageScale: "scale-[1.6]",
-    comingSoon: true,
   },
   {
     id: "18-duo",
@@ -57,7 +55,6 @@ export const SHOP_PRODUCTS: ShopProduct[] = [
     ],
     storage: ["256GB", "512GB", "1TB", "2TB"],
     imagePadding: "p-1",
-    comingSoon: true,
   },
   {
     id: "17-pro-max",

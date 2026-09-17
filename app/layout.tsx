@@ -1,16 +1,16 @@
 import type { Metadata } from "next";
 import Script from "next/script";
-import { Almarai } from "next/font/google";
+import { Noto_Kufi_Arabic } from "next/font/google";
 import "./globals.css";
 import ClientLayout from "./components/ClientLayout";
 import Footer from "./components/Footer";
 import { getCachedCompany } from "./lib/products-cache";
 
-const almarai = Almarai({
+const notoKufiArabic = Noto_Kufi_Arabic({
   subsets: ["arabic"],
-  weight: ["300", "400", "700", "800"],
+  weight: ["300", "400", "500", "700"],
   display: "swap",
-  variable: "--font-almarai",
+  variable: "--font-noto-kufi",
 });
 
 const SITE_URL = "https://masarphone.com";
@@ -109,7 +109,7 @@ export default async function RootLayout({
   const whatsapp: string = c.whatsapp || "";
 
   return (
-    <html lang="ar" dir="rtl" className={almarai.variable}>
+    <html lang="ar" dir="rtl" className={notoKufiArabic.variable}>
       <head>
         <meta name="apple-mobile-web-app-title" content="مسار الهاتف المعتمد" />
         <Script
@@ -123,7 +123,7 @@ export default async function RootLayout({
           gtag('config', 'AW-18394753580');`}
         </Script>
       </head>
-      <body className="antialiased" style={{ fontFamily: 'var(--font-almarai), "Almarai", sans-serif' }} suppressHydrationWarning>
+      <body className="antialiased" style={{ fontFamily: 'var(--font-noto-kufi), "Noto Kufi Arabic", sans-serif' }} suppressHydrationWarning>
         <ClientLayout footer={<Footer />} whatsapp={whatsapp} logo={logo}>{children}</ClientLayout>
       </body>
     </html>

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useSyncExternalStore, useRef, useCallback } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { navItems } from "./data";
@@ -18,8 +18,8 @@ export default function Navbar({ initialLogo }: { initialLogo?: string }) {
   const [searching, setSearching] = useState(false);
   const searchInputRef = useRef<HTMLInputElement>(null);
   const searchWrapRef = useRef<HTMLDivElement>(null);
-  const mounted = useSyncExternalStore(() => () => {}, () => true, () => false);
-  const itemCount = useCartStore((s) => s.items.reduce((sum, i) => sum + i.qty, 0));
+  const mounted = typeof window !== "undefined";
+  const itemCount = useCartStore((s) => mounted ? s.items.reduce((sum, i) => sum + i.qty, 0) : 0);
   const { logo: storeLogo, setLogo } = useCompanyStore();
   const logo = storeLogo || initialLogo || "";
 
@@ -122,7 +122,7 @@ export default function Navbar({ initialLogo }: { initialLogo?: string }) {
             </button>
             <Link href="/cart" aria-label="السلة" className="p-1.5 sm:p-2 text-[#0B43FD] hover:text-[#4f8bff] hover:bg-[#0B43FD]/8 rounded-full transition-colors relative">
               <CartIcon />
-              {mounted && itemCount > 0 && (
+              {itemCount > 0 && (
                 <span className="absolute -top-0.5 -left-0.5 bg-red-500 text-white text-[11px] font-bold min-w-[18px] h-[18px] flex items-center justify-center rounded-full px-0.5">
                   {itemCount}
                 </span>

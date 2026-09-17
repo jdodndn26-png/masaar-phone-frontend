@@ -17,7 +17,7 @@ const IPHONE18_MODELS: Record<string, { name: string; keywords: string[]; slides
     hero: [
       {
         image: "https://res.cloudinary.com/bzwltpqf/image/upload/v1789126696/deec23e7-4e69-4b8f-8b56-8900ec23bba0.webp",
-        title: "iPhone 18 Pro",
+        title: "iPhone 18 Pro Max",
         subtitle: "محترف بمستوى مختلف. أربعة ألوان خلابة، مقاسان مذهلان، وتصميم واحد من الألومنيوم المتين.",
         highlight: "محترف بمستوى مختلف"
       },
@@ -48,7 +48,7 @@ const IPHONE18_MODELS: Record<string, { name: string; keywords: string[]; slides
 
     ],
   },
-  "18": {
+  "18-pro": {
     name: "آيفون 18 برو",
     keywords: ["18 برو", "18 pro"],
     hero: [
@@ -411,12 +411,18 @@ export default async function ShopModelPage({
 
     // التاريخ عدى → رجّع الصفحة العادية بالمنتجات
     const allProducts: Product[] = await getCachedProducts();
+    const isProOnly = model === "18-pro";
     const products = allProducts.filter((p) => {
       const name = (p.name || "").toLowerCase();
       const category = (p.category || "").toLowerCase();
-      return cfg.keywords.some(
+      const matches = cfg.keywords.some(
         (kw) => name.includes(kw.toLowerCase()) || category.includes(kw.toLowerCase())
       );
+      if (!matches) return false;
+      if (isProOnly) {
+        return !name.includes("ماكس") && !name.includes("max") && !category.includes("ماكس") && !category.includes("max");
+      }
+      return true;
     });
     return <ShopModelClient products={products} modelName={cfg.name} hero={cfg.hero ?? []} />;
   }

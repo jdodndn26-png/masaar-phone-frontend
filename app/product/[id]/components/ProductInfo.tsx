@@ -10,6 +10,7 @@ import {
 } from "react-icons/io5";
 import type { Product } from "../../../components/products/types";
 import { useCartStore } from "../../../store/cartStore";
+import InstallmentCalculator from "./InstallmentCalculator";
 
 const fmt = (n: number) => n.toLocaleString("en-US");
 
@@ -29,6 +30,7 @@ export default function ProductInfo({ product, selectedColor, selectedStorage, o
   const [popup, setPopup] = useState(false);
 
   const { brand, taxIncluded, installment, freeDelivery, inStock } = product;
+  const purchasable = product.purchasable !== false; // default true for existing products
   const baseName = product.name.split("،")[0].trim();
 
   const activeVariant = product.variants?.find((v) => v.color === selectedColor);
@@ -208,6 +210,9 @@ export default function ProductInfo({ product, selectedColor, selectedStorage, o
             <p className="text-[10px] text-gray-400 -mt-1">شامل ضريبة القيمة المضافة 15%</p>
           )}
 
+          {/* Installment Calculator */}
+          <InstallmentCalculator price={salePrice ?? originalPrice} />
+
           {/* Installment */}
           {installment?.available && (
             <div className="flex items-center gap-2 bg-[#f7fdf0] rounded-xl px-3 py-2 border border-[#7CC043]/20">
@@ -232,7 +237,7 @@ export default function ProductInfo({ product, selectedColor, selectedStorage, o
             ))}
           </div>
 
-          {/* CTA — shown always */}
+          {/* CTA */}
           <div className="relative">
             <AnimatePresence>
               {popup && (
@@ -250,28 +255,35 @@ export default function ProductInfo({ product, selectedColor, selectedStorage, o
               )}
             </AnimatePresence>
 
-            <motion.button
-              whileHover={{ scale: 1.015 }}
-              whileTap={{ scale: 0.975 }}
-              onClick={added ? () => router.push("/cart") : handleAdd}
-              disabled={loading}
-              className={`w-full font-black text-sm py-3 rounded-xl shadow-md transition-all flex items-center justify-center gap-2 disabled:opacity-70 ${
-                added
-                  ? "bg-emerald-600 text-white shadow-emerald-500/20"
-                  : "bg-[#0B43FD] text-white shadow-[#0B43FD]/20"
-              }`}
-            >
-              {loading ? (
-                <svg className="animate-spin" width={15} height={15} viewBox="0 0 24 24" fill="none">
-                  <circle cx="12" cy="12" r="10" stroke="rgba(255,255,255,.3)" strokeWidth="3" />
-                  <path d="M12 2a10 10 0 0 1 10 10" stroke="white" strokeWidth="3" strokeLinecap="round" />
-                </svg>
-              ) : added ? (
-                <><IoCartOutline size={15} /> عرض السلة</>
-              ) : (
-                <><IoCartOutline size={15} /> أضف للسلة</>
-              )}
-            </motion.button>
+            {purchasable ? (
+              <motion.button
+                whileHover={{ scale: 1.015 }}
+                whileTap={{ scale: 0.975 }}
+                onClick={added ? () => router.push("/cart") : handleAdd}
+                disabled={loading}
+                className={`w-full font-black text-sm py-3 rounded-xl shadow-md transition-all flex items-center justify-center gap-2 disabled:opacity-70 ${
+                  added
+                    ? "bg-emerald-600 text-white shadow-emerald-500/20"
+                    : "bg-[#0B43FD] text-white shadow-[#0B43FD]/20"
+                }`}
+              >
+                {loading ? (
+                  <svg className="animate-spin" width={15} height={15} viewBox="0 0 24 24" fill="none">
+                    <circle cx="12" cy="12" r="10" stroke="rgba(255,255,255,.3)" strokeWidth="3" />
+                    <path d="M12 2a10 10 0 0 1 10 10" stroke="white" strokeWidth="3" strokeLinecap="round" />
+                  </svg>
+                ) : added ? (
+                  <><IoCartOutline size={15} /> عرض السلة</>
+                ) : (
+                  <><IoCartOutline size={15} /> أضف للسلة</>
+                )}
+              </motion.button>
+            ) : (
+              <div className="w-full bg-gray-100 border border-gray-200 rounded-xl py-3 flex items-center justify-center gap-2">
+                <IoLockClosedOutline size={14} className="text-gray-400" />
+                <span className="text-sm font-bold text-gray-400">المنتج متاح للعرض فقط حالياً</span>
+              </div>
+            )}
           </div>
 
         </div>

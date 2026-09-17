@@ -18,5 +18,8 @@ export async function POST(req: NextRequest) {
   if (tag === "category-banners") {
     revalidatePath("/");
   }
+  if (tag === "banners") {
+    revalidatePath("/");
+  }
   return NextResponse.json({ revalidated: true, tag });
 }
